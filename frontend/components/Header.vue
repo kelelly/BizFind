@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <div class="logo">
-      <img src="@/client/assets/images/logo.png" alt="BizFind Logo" />
+      <img src="@/assets/images/logo.png" alt="BizFind Logo" />
       <h1>BizFind</h1>
     </div>
     <nav class="nav">

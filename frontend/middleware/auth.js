@@ -1,27 +1,42 @@
-import { getAuthToken } from '~/utils/auth'; // Utility to fetch the auth token
-
 // Middleware to check if the user is authenticated
-export default function checkAuthenticated({ store, redirect }) {
-  const token = getAuthToken(); // Retrieve the authentication token
-  if (!token && !store.state.auth.isLoggedIn) {
-    return redirect('/login'); // Redirect to login page if not authenticated
+export function checkAuthenticated({ store, redirect }) {
+  // Check if the user is logged in
+  const isLoggedIn = store.state.auth && store.state.auth.isLoggedIn;
+
+  if (!isLoggedIn) {
+    // Redirect to the login page if the user is not authenticated
+    return redirect('/login');
   }
 }
 
 // Middleware to check if the user has an admin role
 export function checkAdmin({ store, redirect }) {
-  const token = getAuthToken(); // Retrieve the authentication token
-  if (!store.state.auth.isLoggedIn || store.state.auth.role !== 'admin') {
-    return redirect('/403'); // Redirect to a 403 error page if unauthorized
+  // Check if the user is logged in and has the admin role
+  const isLoggedIn = store.state.auth && store.state.auth.isLoggedIn;
+  const isAdmin = store.state.auth && store.state.auth.role === 'admin';
+
+  if (!isLoggedIn || !isAdmin) {
+    // Redirect to the 403 error page if the user is not authorized
+    return redirect('/403');
   }
 }
 
 // Middleware to check if the user owns the business
 export function checkBusinessOwner({ store, route, redirect }) {
-  const businessId = route.params.businessId; // Extract the business ID from the route params
-  const isOwner = store.state.business.ownedBusinesses.includes(businessId); // Check ownership
+  // Check if the user is logged in
+  const isLoggedIn = store.state.auth && store.state.auth.isLoggedIn;
+  if (!isLoggedIn) {
+    // Redirect to the login page if the user is not authenticated
+    return redirect('/login');
+  }
 
-  if (!store.state.auth.isLoggedIn || !isOwner) {
-    return redirect('/403'); // Redirect to a 403 error page if unauthorized
+  // Check if the user owns the business
+  const businessId = route.params.businessId; // Assume the business ID is in the route params
+  const ownedBusinesses = store.state.business && store.state.business.ownedBusinesses;
+  const isOwner = ownedBusinesses && ownedBusinesses.includes(businessId);
+
+  if (!isOwner) {
+    // Redirect to the 403 error page if the user does not own the business
+    return redirect('/403');
   }
 }
