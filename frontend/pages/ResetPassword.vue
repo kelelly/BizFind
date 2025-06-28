@@ -17,61 +17,49 @@
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-export const ResetPasswordPage = {
-  setup() {
-    const newPassword = ref('');
-    const email = ref(''); // Only used in forgot password step
-    const resetToken = ref('');
-    const accountType = ref('');
-    const errorMessage = ref('');
-    const router = useRouter();
-    const step = ref('resetPassword'); // Default step
+const newPassword = ref<string>("");
+const email = ref<string>(""); // Only used in forgot password step
+const resetToken = ref<string>("");
+const accountType = ref<string>("");
+const errorMessage = ref<string>("");
+const router = useRouter();
+const step = ref<string>("resetPassword"); // Default step
 
-    const resetPassword = async () => {
-      try {
-        let url;
-        if (accountType.value === 'user') {
-          url = `/api/users/reset-password/${resetToken.value}`;
-        } else if (accountType.value === 'business') {
-          url = `/api/businesses/reset-password/${resetToken.value}`;
-        } else {
-          errorMessage.value = 'Invalid account type.';
-          return;
-        }
+const resetPassword = async (): Promise<void> => {
+  try {
+    let url: string;
+    if (accountType.value === "user") {
+      url = `/api/users/reset-password/${resetToken.value}`;
+    } else if (accountType.value === "business") {
+      url = `/api/businesses/reset-password/${resetToken.value}`;
+    } else {
+      errorMessage.value = "Invalid account type.";
+      return;
+    }
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: newPassword.value }),
-        });
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: newPassword.value }),
+    });
 
-        if (response.ok) {
-          alert('Password reset successful! You can now log in with your new password.');
-          router.push({ name: 'login' }); // Redirect to login page after successful reset
-        } else {
-          console.error('Error resetting password:', response);
-          errorMessage.value = 'Password reset failed. Please try again.';
-        }
-      } catch (error) {
-        console.error('Error resetting password:', error);
-        errorMessage.value = 'Password reset failed. Please try again.';
-      }
-    };
-
-    return {
-      newPassword,
-      email,
-      resetToken,
-      accountType,
-      errorMessage,
-      step,
-      resetPassword,
-    };
-  },
+    if (response.ok) {
+      alert(
+        "Password reset successful! You can now log in with your new password."
+      );
+      router.push({ name: "login" }); // Redirect to login page after successful reset
+    } else {
+      console.error("Error resetting password:", response);
+      errorMessage.value = "Password reset failed. Please try again.";
+    }
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    errorMessage.value = "Password reset failed. Please try again.";
+  }
 };
 </script>
 
@@ -122,22 +110,22 @@ export const ResetPasswordPage = {
   margin-top: 1em;
 }
 
-.navigation-buttons {
+.reset-password-page .navigation-buttons {
+  margin-top: 2em;
   display: flex;
-  justify-content: space-between;
-  margin-top: 1em;
+  gap: 1em;
 }
 
-.navigation-buttons button {
+.reset-password-page .navigation-buttons button {
+  background-color: #f8f9fa;
+  color: #007bff;
+  border: 1px solid #007bff;
   padding: 0.5em 1em;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 4px;
   cursor: pointer;
+  border-radius: 4px;
 }
 
-.navigation-buttons button:hover {
-  background-color: #0056b3;
+.reset-password-page .navigation-buttons button:hover {
+  background-color: #e9ecef;
 }
 </style>

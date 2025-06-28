@@ -4,12 +4,11 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
-import BusinessEdit from '~/components/businessEdit.vue';
+<script setup lang="ts">
+import BusinessEdit from "~/components/businessEdit.vue";
 
-export default defineComponent({
-  components: { BusinessEdit }
+definePageMeta({
+  middleware: ["auth", "business-owner"],
 });
 </script>
 

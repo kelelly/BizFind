@@ -1,41 +1,64 @@
 <template>
-  <!-- same template as before -->
+  <div class="user-register">
+    <h2>Register</h2>
+    <form @submit.prevent="register">
+      <label>
+        Username:
+        <input type="text" v-model="user.username" required />
+      </label>
+      <label>
+        Email:
+        <input type="email" v-model="user.email" required />
+      </label>
+      <label>
+        Password:
+        <input type="password" v-model="user.password" required />
+      </label>
+      <button type="submit">Register</button>
+    </form>
+    <p>
+      Already have an account? <NuxtLink to="/login">Login here</NuxtLink>
+    </p>
+  </div>
 </template>
 
-<script>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-export default {
-  setup() {
-    const user = ref({
-      username: '',
-      email: '',
-      password: ''
+interface User {
+  username: string;
+  email: string;
+  password: string;
+}
+
+const user = ref<User>({
+  username: "",
+  email: "",
+  password: "",
+});
+
+const router = useRouter();
+
+const register = async (): Promise<void> => {
+  try {
+    const response = await fetch("/api/users/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user.value),
     });
-    const router = useRouter();
 
-    async function register() {
-      try {
-        await fetch('/api/users/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(user.value)
-        });
-        alert('Registration successful! Please log in.');
-        router.push({ name: 'Login' }); // Redirect to login view after successful registration
-      } catch (error) {
-        console.error('Error registering:', error);
-        alert('Registration failed. Please try again.');
-      }
+    if (!response.ok) {
+      throw new Error("Registration failed");
     }
 
-    return {
-      user,
-      register
-    };
+    alert("Registration successful! Please log in.");
+    router.push("/login");
+  } catch (error) {
+    console.error("Error registering:", error);
+    alert("Registration failed. Please try again.");
   }
-}
+};
 </script>
 
 <style scoped>

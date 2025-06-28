@@ -1,42 +1,46 @@
-const express = require('express');
+// backend/routes/businessRoutes.js
+
+const express = require("express");
 const {
+  getAllBusinesses,
   getBusinessById,
   updateBusiness,
   deleteBusiness,
   addProduct,
   getBusinessProducts,
-  getAllBusinesses,
-} = require('../controllers/businessController');
-const { isAuthenticated, isAdmin, isBusinessOwner } = require('../middleware/auth'); // Importing the middleware
+} = require("../controllers/businessController");
+const {
+  isAuthenticated,
+  isBusinessOwner,
+  hasRole,
+} = require("../middleware/auth");
 
 const router = express.Router();
 
-// Public route to get all businesses with optional filtering
-router.get('/', async (req, res) => {
-  try {
-    const { location, category, reviews } = req.query;
+// ── Public ────────────────────────────────────────────────────
+router.get("/", getAllBusinesses); // List/filter all businesses
+router.get("/:id", getBusinessById); // Get single business
+router.get("/:businessId/products", getBusinessProducts); // Public product list
 
-    const query = {};
-    if (location) query.location = { $regex: location, $options: 'i' };
-    if (category) query.category = category;
-    if (reviews) query.rating = { $gte: parseInt(reviews) };
+// ── Protected ─────────────────────────────────────────────────
+router.use(isAuthenticated); // All below require valid JWT
 
-    const businesses = await Business.find(query);
-    res.status(200).json(businesses);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error. Could not retrieve businesses.', error });
-  }
-});
+router.post(
+  "/:businessId/products",
+  isBusinessOwner, // Only owner may add
+  addProduct
+);
 
-// Routes that require authentication
-router.get('/:id', isAuthenticated, getBusinessById);
+router.put(
+  "/:id",
+  isBusinessOwner, // Only owner may update
+  updateBusiness
+);
 
-// Update and delete routes with ownership and admin checks
-router.put('/:id', isAuthenticated, isBusinessOwner, updateBusiness);
-router.delete('/:id', isAuthenticated, isAdmin, deleteBusiness); // Only admins can delete businesses
-
-// Product management routes with ownership check
-router.post('/:businessId/products', isAuthenticated, isBusinessOwner, addProduct);
-router.get('/:businessId/products', getBusinessProducts); // May not require authentication if products are public
+router.delete(
+  "/:id",
+  hasRole("admin"), // Only admins may delete
+  deleteBusiness
+);
 
 module.exports = router;

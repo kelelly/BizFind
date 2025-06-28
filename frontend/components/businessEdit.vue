@@ -32,14 +32,28 @@
       </label>
       <label>
         Location (latitude, longitude):
-        <input type="text" v-model="business.location" placeholder="e.g., 40.7128,-74.0060" />
+        <input
+          type="text"
+          v-model="business.location"
+          placeholder="e.g., 40.7128,-74.0060"
+        />
       </label>
       <label>
         Operating Hours:
         <div v-for="(hour, index) in business.operatingHours" :key="index">
           <input type="text" v-model="hour.day" placeholder="Day" required />
-          <input type="text" v-model="hour.open" placeholder="Open Time" required />
-          <input type="text" v-model="hour.close" placeholder="Close Time" required />
+          <input
+            type="text"
+            v-model="hour.open"
+            placeholder="Open Time"
+            required
+          />
+          <input
+            type="text"
+            v-model="hour.close"
+            placeholder="Close Time"
+            required
+          />
           <button @click="removeOperatingHour(index)">Remove</button>
         </div>
         <button @click="addOperatingHour">Add Operating Hour</button>
@@ -49,67 +63,93 @@
   </div>
 </template>
 
-<script>
-import { ref, reactive } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+<script lang="ts">
+import { ref, reactive, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+
+interface OperatingHour {
+  day: string;
+  open: string;
+  close: string;
+}
+
+interface Business {
+  _id?: string;
+  name: string;
+  category: string;
+  phone: string;
+  email: string;
+  website: string;
+  address: string;
+  description: string;
+  location: string;
+  operatingHours: OperatingHour[];
+}
 
 export default {
   setup() {
     const router = useRouter();
     const route = useRoute();
-    const business = reactive({
-      name: '',
-      category: '',
-      phone: '',
-      email: '',
-      website: '',
-      address: '',
-      description: '',
-      location: '',
-      operatingHours: []
+
+    const business = reactive<Business>({
+      name: "",
+      category: "",
+      phone: "",
+      email: "",
+      website: "",
+      address: "",
+      description: "",
+      location: "",
+      operatingHours: [],
     });
 
-    async function fetchBusinessDetails() {
+    const fetchBusinessDetails = async () => {
       try {
         const response = await fetch(`/api/business/${route.params.id}`);
-        Object.assign(business, await response.json());
+        if (!response.ok) throw new Error("Failed to fetch business");
+        const data = await response.json();
+        Object.assign(business, data);
       } catch (error) {
-        console.error('Error fetching business details:', error);
+        console.error("Error fetching business details:", error);
       }
-    }
+    };
 
-    async function updateBusiness() {
+    const updateBusiness = async () => {
       try {
-        await fetch(`/api/business/${business._id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(business)
+        const response = await fetch(`/api/business/${business._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(business),
         });
-        alert('Business profile updated successfully!');
-        router.push({ name: 'BusinessProfile', params: { id: business._id } });
+
+        if (!response.ok) throw new Error("Failed to update business");
+        alert("Business profile updated successfully!");
+        router.push({ name: "BusinessProfile", params: { id: business._id } });
       } catch (error) {
-        console.error('Error updating business:', error);
-        alert('Failed to update business profile. Please try again.');
+        console.error("Error updating business:", error);
+        alert("Failed to update business profile. Please try again.");
       }
-    }
+    };
 
-    function addOperatingHour() {
-      business.operatingHours.push({ day: '', open: '', close: '' });
-    }
+    const addOperatingHour = () => {
+      business.operatingHours.push({ day: "", open: "", close: "" });
+    };
 
-    function removeOperatingHour(index) {
+    const removeOperatingHour = (index: number) => {
       business.operatingHours.splice(index, 1);
-    }
+    };
 
-    fetchBusinessDetails();
+    onMounted(() => {
+      fetchBusinessDetails();
+    });
 
     return {
       business,
       updateBusiness,
       addOperatingHour,
-      removeOperatingHour
+      removeOperatingHour,
     };
-  }
+  },
 };
 </script>
 

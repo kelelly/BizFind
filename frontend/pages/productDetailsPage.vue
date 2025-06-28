@@ -4,15 +4,10 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
-import ProductDetails from '~/components/ProductDetails.vue';
+<script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 
-export const ProductPage = defineComponent({
-  components: {
-    ProductDetails
-  }
-});
+const ProductDetails = defineAsyncComponent(() => import('~/components/ProductDetails.vue'))
 </script>
 
 <style scoped>

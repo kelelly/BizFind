@@ -1,6 +1,6 @@
 <template>
   <div class="product-form">
-    <h2>{{ isEditMode? 'Edit Product' : 'Add a New Product' }}</h2>
+    <h2>{{ isEditMode ? "Edit Product" : "Add a New Product" }}</h2>
     <form @submit.prevent="handleSubmit">
       <label>
         Product Name:
@@ -16,10 +16,18 @@
           <option value="" disabled>Select Category</option>
           <option value="Groceries">Groceries</option>
           <option value="Foodstuffs">Foodstuffs</option>
-          <option value="Health and Personal Care">Health and Personal Care</option>
-          <option value="Home and Household Essentials">Home and Household Essentials</option>
-          <option value="Electronics and Entertainment">Electronics and Entertainment</option>
-          <option value="Clothing and Accessories">Clothing and Accessories</option>
+          <option value="Health and Personal Care">
+            Health and Personal Care
+          </option>
+          <option value="Home and Household Essentials">
+            Home and Household Essentials
+          </option>
+          <option value="Electronics and Entertainment">
+            Electronics and Entertainment
+          </option>
+          <option value="Clothing and Accessories">
+            Clothing and Accessories
+          </option>
           <option value="Miscellaneous">Miscellaneous</option>
         </select>
       </label>
@@ -35,75 +43,90 @@
         Image URL:
         <input type="text" v-model="product.imageUrl" />
       </label>
-      <button type="submit">{{ isEditMode? 'Update Product' : 'Add Product' }}</button>
+      <button type="submit">
+        {{ isEditMode ? "Update Product" : "Add Product" }}
+      </button>
     </form>
   </div>
 </template>
 
-<script>
-export default {
-  setup() {
-    const router = useRouter();
-    const route = useRoute();
-    const product = reactive({
-      name: '',
-      description: '',
-      category: '',
-      price: 0,
-      quantity: 0,
-      imageUrl: '',
-      businessId: route.params.businessId || '',
-    });
-    const isEditMode = ref(false);
+<script lang="ts" setup>
+import { ref, reactive, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 
-    async function fetchProductDetails(productId) {
-      try {
-        const response = await fetch(`/api/products/${productId}`);
-        const data = await response.json();
-        Object.assign(product, data);
-      } catch (error) {
-        console.error('Error fetching product details:', error);
-      }
-    }
+interface Product {
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
+  businessId: string;
+}
 
-    async function handleSubmit() {
-      try {
-        if (isEditMode.value) {
-          await fetch(`/api/products/${route.params.productId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(product),
-          });
-          alert('Product updated successfully!');
-        } else {
-          await fetch('/api/products', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(product),
-          });
-          alert('Product added successfully!');
-        }
-        router.push({ name: 'BusinessProfile', params: { id: product.businessId } });
-      } catch (error) {
-        console.error('Error saving product:', error);
-        alert('Failed to save product. Please try again.');
-      }
-    }
+const router = useRouter();
+const route = useRoute();
 
-    onMounted(() => {
-      if (route.params.productId) {
-        isEditMode.value = true;
-        fetchProductDetails(route.params.productId);
-      }
+const isEditMode = ref(false);
+
+const product = reactive<Product>({
+  name: "",
+  description: "",
+  category: "",
+  price: 0,
+  quantity: 0,
+  imageUrl: "",
+  businessId: String(route.params.businessId || ""),
+});
+
+async function fetchProductDetails(productId: string) {
+  try {
+    const response = await fetch(`/api/products/${productId}`);
+    if (!response.ok) throw new Error("Failed to fetch product");
+    const data = await response.json();
+    Object.assign(product, data);
+  } catch (error) {
+    console.error("Error fetching product details:", error);
+  }
+}
+
+async function handleSubmit() {
+  try {
+    const url = isEditMode.value
+      ? `/api/products/${route.params.productId}`
+      : "/api/products";
+    const method = isEditMode.value ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product),
     });
 
-    return {
-      product,
-      isEditMode,
-      handleSubmit,
-    };
-  },
-};
+    if (!response.ok) throw new Error("Failed to save product");
+
+    alert(
+      isEditMode.value
+        ? "Product updated successfully!"
+        : "Product added successfully!"
+    );
+    router.push({
+      name: "BusinessProfile",
+      params: { id: product.businessId },
+    });
+  } catch (error) {
+    console.error("Error saving product:", error);
+    alert("Failed to save product. Please try again.");
+  }
+}
+
+onMounted(() => {
+  const productId = route.params.productId as string | undefined;
+  if (productId) {
+    isEditMode.value = true;
+    fetchProductDetails(productId);
+  }
+});
 </script>
 
 <style scoped>

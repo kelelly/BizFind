@@ -1,22 +1,28 @@
-const bcrypt = require('bcrypt');
-const User = require('../models/User');
-const Business = require('../models/Business');
-const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+// backend/controllers/authController.js
 
+const bcrypt = require("bcrypt");
+const User = require("../models/User");
+const Business = require("../models/Business");
+const crypto = require("crypto");
+const { generateToken } = require("../utils/jwtHelper");
+
+// Helper function to simulate email sending
 const sendEmail = (email, subject, message) => {
-  console.log(`Email sent to ${email} with subject "${subject}" and message "${message}"`);
+  console.log(
+    `Email sent to ${email} with subject "${subject}" and message "${message}"`
+  );
 };
 
+// Register a new user
 const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
     if (await User.findOne({ email })) {
-      return res.status(400).json({ message: 'Email already exists' });
+      return res.status(400).json({ message: "Email already exists" });
     }
     if (await User.findOne({ username })) {
-      return res.status(400).json({ message: 'Username already exists' });
+      return res.status(400).json({ message: "Username already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,21 +30,31 @@ const registerUser = async (req, res) => {
     const user = new User({ username, email, password: hashedPassword });
     await user.save();
 
-    req.session.userId = user._id;
-    req.session.email = user.email;
+    const token = generateToken({ id: user._id, role: "user" });
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({
+      message: "User registered successfully",
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: "user",
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
+// Register a new business
 const registerBusiness = async (req, res) => {
   try {
-    const { name, email, password, address, phone, category, location } = req.body;
+    const { name, email, password, address, phone, category, location } =
+      req.body;
 
     if (await Business.findOne({ email })) {
-      return res.status(400).json({ message: 'Email already exists' });
+      return res.status(400).json({ message: "Email already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,43 +70,61 @@ const registerBusiness = async (req, res) => {
     });
     await business.save();
 
-    req.session.userId = business._id;
-    req.session.email = business.email;
-    req.session.role = 'business';
+    const token = generateToken({ id: business._id, role: "business" });
 
-    res.status(201).json({ message: 'Business registered successfully' });
+    res.status(201).json({
+      message: "Business registered successfully",
+      token,
+      user: {
+        id: business._id,
+        name: business.name,
+        email: business.email,
+        role: "business",
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
+// Login user or business
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    let user = await User.findOne({ email }).select('+password');
+    let user = await User.findOne({ email }).select("+password");
+    let role = "user";
+
     if (!user) {
-      user = await Business.findOne({ email }).select('+password');
+      user = await Business.findOne({ email }).select("+password");
+      role = "business";
       if (!user) {
-        return res.status(400).json({ message: 'Invalid email or password' });
+        return res.status(400).json({ message: "Invalid email or password" });
       }
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    req.session.userId = user._id;
-    req.session.email = user.email;
-    req.session.role = user.role || 'user';
+    const token = generateToken({ id: user._id, role });
 
-    res.status(200).json({ message: 'Logged in successfully' });
+    res.status(200).json({
+      message: "Logged in successfully",
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
+// Request password reset
 const requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
@@ -98,32 +132,43 @@ const requestPasswordReset = async (req, res) => {
     if (!user) {
       user = await Business.findOne({ email });
       if (!user) {
-        return res.status(404).json({ message: 'Email not found' });
+        return res.status(404).json({ message: "Email not found" });
       }
     }
 
-    const token = crypto.randomBytes(20).toString('hex');
+    const token = crypto.randomBytes(20).toString("hex");
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 3600000;
     await user.save();
 
     const resetUrl = `http://your-frontend-url/reset-password?token=${token}`;
-    sendEmail(user.email, 'Password Reset', `Click this link to reset your password: ${resetUrl}`);
+    sendEmail(
+      user.email,
+      "Password Reset",
+      `Click this link to reset your password: ${resetUrl}`
+    );
 
-    res.json({ message: 'Password reset email sent' });
+    res.json({ message: "Password reset email sent" });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
+// Reset password
 const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-    let user = await User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
+    let user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
     if (!user) {
-      user = await Business.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
+      user = await Business.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
       if (!user) {
-        return res.status(400).json({ message: 'Invalid or expired token' });
+        return res.status(400).json({ message: "Invalid or expired token" });
       }
     }
 
@@ -132,9 +177,9 @@ const resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.json({ message: 'Password has been reset' });
+    res.json({ message: "Password has been reset" });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 

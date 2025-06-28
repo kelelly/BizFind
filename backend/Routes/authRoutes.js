@@ -1,23 +1,35 @@
 // backend/routes/authRoutes.js
 
-const express = require('express');
+const express = require("express");
+const { generateToken } = require("../utils/jwtHelper");
+const { comparePassword } = require("../utils/auth");
+const User = require("../models/User");
+
 const router = express.Router();
-const {
-  registerUser,
-  registerBusiness,
-  login,
-  requestPasswordReset,
-  resetPassword
-} = require('../controllers/authController');
-const { isAuthenticated } = require('../middleware/auth'); // Importing the middleware
 
-// Public routes (no authentication required)
-router.post('/register/user', registerUser);
-router.post('/register/business', registerBusiness);
-router.post('/login', login);
+// Login route
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-// Routes that could require authentication depending on your app's security policies
-router.post('/password-reset/request', requestPasswordReset); // Typically, this doesn't require auth
-router.post('/password-reset/reset', resetPassword); // Ensure the reset token is validated in the controller
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
+
+    // Generate JWT token
+    const token = generateToken(user._id, user.email);
+
+    res.json({ token });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
 
 module.exports = router;

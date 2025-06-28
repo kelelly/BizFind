@@ -5,14 +5,8 @@
   </div>
 </template>
 
-<script>
-import ProductList from '~/components/ProductList.vue';
-
-export const ProductListPage = {
-  components: {
-    ProductList
-  }
-};
+<script setup lang="ts">
+import ProductList from "~/components/ProductList.vue";
 </script>
 
 <style scoped>

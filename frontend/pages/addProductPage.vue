@@ -4,12 +4,11 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
-import ProductForm from '~/components/businessAddProduct.vue';
+<script setup lang="ts">
+import ProductForm from "~/components/businessAddProduct.vue";
 
-export default defineComponent({
-  components: { ProductForm }
+definePageMeta({
+  middleware: ["auth", "business-owner"],
 });
 </script>
 

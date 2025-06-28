@@ -4,14 +4,8 @@
   </div>
 </template>
 
-<script>
-import Login from '~/components/Login.vue';
-
-export const LoginPage = {
-  components: {
-    Login
-  }
-};
+<script setup lang="ts">
+import Login from "~/components/Login.vue";
 </script>
 
 <style scoped>

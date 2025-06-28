@@ -13,32 +13,41 @@
   </div>
 </template>
 
-<script>
-let ProductDetails = {
-  setup() {
-    let product = ref(null);
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 
-    onMounted(async () => {
-      try {
-        const productId = useRouter().currentRoute.value.params.id;
-        const response = await fetch(`/api/products/${productId}`);
-        product.value = await response.json();
-      } catch (error) {
-        console.error('Error fetching product details:', error);
-      }
-    });
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  quantity: number;
+  imageUrl?: string;
+}
 
-    const addToCart = () => {
-      // Logic to add the product to the user's cart
-      alert(`${product.value.name} has been added to your cart.`);
-    };
+const product = ref<Product | null>(null);
+const route = useRoute();
 
-    return {
-      product,
-      addToCart,
-    };
-  },
+const fetchProductDetails = async () => {
+  try {
+    const productId = route.params.id as string;
+    const response = await fetch(`/api/products/${productId}`);
+    if (!response.ok) throw new Error("Failed to fetch product details");
+    product.value = await response.json();
+  } catch (error) {
+    console.error("Error fetching product details:", error);
+  }
 };
+
+const addToCart = () => {
+  if (product.value) {
+    alert(`${product.value.name} has been added to your cart.`);
+  }
+};
+
+onMounted(fetchProductDetails);
 </script>
 
 <style scoped>

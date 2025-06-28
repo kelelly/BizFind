@@ -1,30 +1,18 @@
 <template>
-  <div id="app">
-    <Header />
-    <main>
-      <Nuxt />
-    </main>
-    <Footer />
-  </div>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
 
-<script>
-import Header from '@/components/Header.vue';
-import Footer from '@/components/Footer.vue';
-
-export default {
-  components: {
-    Header,
-    Footer
-  }
-}
+<script setup lang="ts">
+// Global app setup
 </script>
 
 <style>
 body {
-  background-color: #f5f5f5; /* light grey background */
-  color: #333; /* default text color */
-  font-family: 'Arial', sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  font-family: "Arial", sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -41,7 +29,7 @@ main {
 }
 
 a {
-  color: #0066cc; /* link color */
+  color: #0066cc;
   text-decoration: none;
 }
 
@@ -51,7 +39,7 @@ a:hover {
 
 .header,
 .footer {
-  background-color: #003366; /* dark blue */
+  background-color: #003366;
   color: #fff;
   padding: 1em;
 }

@@ -13,31 +13,36 @@
   </div>
 </template>
 
-<script>
-let ProductList = {
-  setup() {
-    let products = ref([]);
-    let router = useRouter();
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
-    onMounted(async () => {
-      try {
-        const response = await fetch(`/api/products?businessId=${router.currentRoute.value.params.businessId}`);
-        products.value = await response.json();
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    });
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+}
 
-    const viewProductDetails = (productId) => {
-      router.push({ name: 'ProductDetails', params: { id: productId } });
-    };
+const products = ref<Product[]>([]);
+const router = useRouter();
 
-    return {
-      products,
-      viewProductDetails,
-    };
-  },
+const fetchProducts = async () => {
+  try {
+    const response = await fetch(
+      `/api/products?businessId=${router.currentRoute.value.params.businessId}`
+    );
+    if (!response.ok) throw new Error("Failed to fetch products");
+    products.value = await response.json();
+  } catch (error) {
+    console.error("Error fetching products:", error);
+  }
 };
+
+const viewProductDetails = (productId: string) => {
+  router.push({ name: "ProductDetails", params: { id: productId } });
+};
+
+onMounted(fetchProducts);
 </script>
 
 <style scoped>
@@ -45,8 +50,8 @@ let ProductList = {
   max-width: 800px;
   margin: 0 auto;
   padding: 2em;
-  background-color: #ffffff; /* White background */
-  color: #1b1b1b; /* Dark blue (almost black) text color */
+  background-color: #ffffff;
+  color: #1b1b1b;
 }
 
 .no-products {
@@ -72,7 +77,7 @@ let ProductList = {
 
 .product-card h3,
 .product-card p {
-  color: #1b1b1b; /* Dark blue (almost black) text color */
+  color: #1b1b1b;
 }
 
 .product-card h3 {

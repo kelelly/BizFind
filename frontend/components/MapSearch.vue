@@ -1,22 +1,27 @@
 <template>
   <div class="map-search">
     <div class="search-controls">
-      <input v-model="searchQuery" placeholder="Search by name or category" @input="filterBusinesses" />
-      <select v-model="selectedCategory" @change="filterBusinesses">
+      <input v-model="searchQuery" placeholder="Search by name or category" />
+      <select v-model="selectedCategory">
         <option value="">All Categories</option>
-        <option value="Grocery Store">Grocery Store</option>
-        <option value="Supermarket">Supermarket</option>
-        <option value="General Shop">General Shop</option>
+        <option
+          v-for="category in categories"
+          :key="category"
+          :value="category"
+        >
+          {{ category }}
+        </option>
       </select>
-      <select v-model="selectedStatus" @change="filterBusinesses">
+      <select v-model="selectedStatus">
         <option value="">All</option>
         <option value="open">Open Now</option>
         <option value="closed">Closed</option>
       </select>
-      <input type="number" v-model.number="radius" placeholder="Radius (km)" @input="filterBusinesses" />
+      <input type="number" v-model.number="radius" placeholder="Radius (km)" />
     </div>
+
     <div class="map-container">
-      <here-map :center="{ lat: defaultCenter.lat, lng: defaultCenter.lng }" :zoom="zoom" style="height: 500px;">
+      <here-map :center="defaultCenter" :zoom="zoom" style="height: 500px">
         <here-marker
           v-for="business in filteredBusinesses"
           :key="business._id"
@@ -27,7 +32,7 @@
           <div class="info-window">
             <h3>{{ business.name }}</h3>
             <p>Category: {{ business.category }}</p>
-            <p>{{ business.openNow ? 'Open Now' : 'Closed' }}</p>
+            <p>{{ business.openNow ? "Open Now" : "Closed" }}</p>
             <p><strong>Address:</strong> {{ business.address }}</p>
             <button @click="navigateTo(business)">Get Directions</button>
           </div>
@@ -37,95 +42,89 @@
   </div>
 </template>
 
-<script>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import HereMap from 'vue-here-map';
-import HereMarker from 'vue-here-map-marker';
+<script setup lang="ts">
+import { ref, computed } from "vue";
+import { useFetch } from "#app";
+import { useRouter } from "vue-router";
+import type { Business } from "~/types";
 
-export default {
-  components: {
-    HereMap,
-    HereMarker,
-  },
-  setup() {
-    const router = useRouter();
-    const businesses = ref([]);
-    const filteredBusinesses = ref([]);
-    const searchQuery = ref('');
-    const selectedCategory = ref('');
-    const selectedStatus = ref('');
-    const radius = ref(10);
-    const defaultCenter = { lat: 52.52, lng: 13.405 };
-    const zoom = ref(12);
+const router = useRouter();
 
-    onMounted(async () => {
-      try {
-        const response = await fetch('/api/businesses');
-        businesses.value = await response.json();
-        filteredBusinesses.value = businesses.value;
-      } catch (error) {
-        console.error('Error fetching businesses:', error);
-      }
-    });
+const { data: businesses, error } = await useFetch<Business[]>(
+  "/api/businesses"
+);
+const searchQuery = ref("");
+const selectedCategory = ref("");
+const selectedStatus = ref<"" | "open" | "closed">("");
+const radius = ref(10);
 
-    const filterBusinesses = () => {
-      filteredBusinesses.value = businesses.value.filter(business => {
-        const matchesQuery = business.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          business.category.toLowerCase().includes(searchQuery.value.toLowerCase());
-        const matchesCategory = selectedCategory.value ? business.category === selectedCategory.value : true;
+const defaultCenter = { lat: 52.52, lng: 13.405 };
+const zoom = 12;
+
+// Dynamic categories from businesses
+const categories = computed(() =>
+  businesses.value ? [...new Set(businesses.value.map((b) => b.category))] : []
+);
+
+// Haversine formula for distance calculation
+const calculateDistance = (lat: number, lng: number): number => {
+  const R = 6371;
+  const dLat = ((lat - defaultCenter.lat) * Math.PI) / 180;
+  const dLng = ((lng - defaultCenter.lng) * Math.PI) / 180;
+  const a =
+    0.5 -
+    Math.cos(dLat) / 2 +
+    (Math.cos((defaultCenter.lat * Math.PI) / 180) *
+      Math.cos((lat * Math.PI) / 180) *
+      (1 - Math.cos(dLng))) /
+      2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+};
+
+// Computed filtered businesses
+const filteredBusinesses = computed(() =>
+  businesses.value
+    ? businesses.value.filter((business) => {
+        const matchesQuery =
+          business.name
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase()) ||
+          business.category
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase());
+
+        const matchesCategory = selectedCategory.value
+          ? business.category === selectedCategory.value
+          : true;
+
         const matchesStatus = selectedStatus.value
-          ? selectedStatus.value === 'open'
+          ? selectedStatus.value === "open"
             ? business.openNow
             : !business.openNow
           : true;
-        const matchesDistance = radius.value
-          ? calculateDistance(business.location.coordinates[1], business.location.coordinates[0]) <= radius.value
-          : true;
 
-        return matchesQuery && matchesCategory && matchesStatus && matchesDistance;
-      });
-    };
+        const matchesDistance =
+          radius.value >= 0
+            ? calculateDistance(
+                business.location.coordinates[1],
+                business.location.coordinates[0]
+              ) <= radius.value
+            : true;
 
-    const calculateDistance = (lat, lng) => {
-      const R = 6371; // Radius of the Earth in km
-      const dLat = (lat - defaultCenter.lat) * Math.PI / 180;
-      const dLng = (lng - defaultCenter.lng) * Math.PI / 180;
-      const a = 
-        0.5 - Math.cos(dLat) / 2 +
-        Math.cos(defaultCenter.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
-        (1 - Math.cos(dLng)) / 2;
+        return (
+          matchesQuery && matchesCategory && matchesStatus && matchesDistance
+        );
+      })
+    : []
+);
 
-      return R * 2 * Math.asin(Math.sqrt(a));
-    };
-
-    const navigateTo = (business) => {
-      // Use HERE Maps API to get navigation directions
-      const start = 'geo!52.52,13.405'; // Example start point (Berlin)
-      const destination = `geo!${business.location.coordinates[1]},${business.location.coordinates[0]}`;
-
-      window.open(
-        `https://www.here.com/route/car/${start}/${destination}?map=${business.location.coordinates[1]},${business.location.coordinates[0]},14,normal`,
-        '_blank'
-      );
-    };
-
-    return {
-      businesses,
-      filteredBusinesses,
-      searchQuery,
-      selectedCategory,
-      selectedStatus,
-      radius,
-      defaultCenter,
-      zoom,
-      filterBusinesses,
-      navigateTo,
-    };
-  },
+// Open Here map navigation link
+const navigateTo = (business: Business) => {
+  const destination = `geo!${business.location.coordinates[1]},${business.location.coordinates[0]}`;
+  const mapLink = `https://www.here.com/route/car/geo!${defaultCenter.lat},${defaultCenter.lng}/${destination}?map=${business.location.coordinates[1]},${business.location.coordinates[0]},14,normal`;
+  window.open(mapLink, "_blank");
 };
 </script>
-
 
 <style scoped>
 .map-search {

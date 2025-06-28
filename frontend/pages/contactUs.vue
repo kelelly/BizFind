@@ -2,7 +2,9 @@
   <div class="contact-us">
     <h1>Contact Us</h1>
     <p>
-      We’d love to hear from you! If you have any questions, feedback, or need assistance, please reach out to us using the contact form below or through our provided contact information.
+      We'd love to hear from you! If you have any questions, feedback, or need
+      assistance, please reach out to us using the contact form below or through
+      our provided contact information.
     </p>
     <form @submit.prevent="sendMessage">
       <label>
@@ -23,44 +25,46 @@
       <h2>Our Contact Information</h2>
       <p>Email: in4bizfind.com</p>
       <p>Phone: +254742584681</p>
-      <p>Facebook_Page: @Kelelly_Creations</p>
+      <p>Facebook_Page: @BizzareEmpire</p>
       <p>X_Handle: @BizEmperor</p>
       <p>Address: Baraton Street, Box 2500-30100, Eldoret</p>
     </div>
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref } from "vue";
 
-export default {
-  setup() {
-    const contact = ref({
-      name: '',
-      email: '',
-      message: ''
+interface ContactForm {
+  name: string;
+  email: string;
+  message: string;
+}
+
+const contact = ref<ContactForm>({
+  name: "",
+  email: "",
+  message: "",
+});
+
+const sendMessage = async (): Promise<void> => {
+  try {
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(contact.value),
     });
 
-    async function sendMessage() {
-      try {
-        const response = await fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(contact.value),
-        });
-        alert('Your message has been sent successfully!');
-        contact.value = { name: '', email: '', message: '' };
-      } catch (error) {
-        console.error('Error sending message:', error);
-        alert('Failed to send your message. Please try again.');
-      }
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
     }
 
-    return {
-      contact,
-      sendMessage,
-    };
-  },
+    alert("Your message has been sent successfully!");
+    contact.value = { name: "", email: "", message: "" };
+  } catch (error) {
+    console.error("Error sending message:", error);
+    alert("Failed to send your message. Please try again.");
+  }
 };
 </script>
 

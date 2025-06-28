@@ -1,81 +1,150 @@
 <template>
-  <div class="business-cards">
-    <div v-for="business in filteredBusinesses" :key="business._id" class="business-card">
-      <h2>{{ business.name }}</h2>
-      <p>Category: {{ business.category }}</p>
-      <p>Operating Hours:</p>
-      <ul>
-        <li v-for="hour in business.operatingHours" :key="hour.day">
-          {{ hour.day }}: {{ hour.open }} - {{ hour.close }}
-        </li>
-      </ul>
-      <p>Contact:</p>
-      <p>Phone: {{ business.contact.phone }}</p>
-      <p>Email: {{ business.contact.email }}</p>
-      <div class="card-actions">
-        <button @click="viewBusiness(business._id)">View Details</button>
-        <button @click="viewFullProfile(business._id)">Full Business Profile</button>
+  <div>
+    <!-- Filters Section -->
+    <div class="filters">
+      <input
+        v-model="filter.location"
+        type="text"
+        placeholder="Filter by location"
+      />
+      <select v-model="filter.category">
+        <option value="">All Categories</option>
+        <option value="Grocery Store">Grocery Store</option>
+        <option value="Supermarkets">Supermarkets</option>
+        <option value="General Stores">General Stores</option>
+      </select>
+      <input
+        v-model.number="filter.reviews"
+        type="number"
+        placeholder="Min Reviews"
+        min="0"
+        max="5"
+      />
+    </div>
+
+    <!-- No Businesses Message -->
+    <div v-if="filteredBusinesses.length === 0" class="no-businesses">
+      No Businesses Displayed!
+    </div>
+
+    <!-- Business Cards -->
+    <div class="business-cards">
+      <div
+        v-for="business in filteredBusinesses"
+        :key="business._id"
+        class="business-card"
+      >
+        <h2>{{ business.name }}</h2>
+        <p>Category: {{ business.category }}</p>
+        <p>Operating Hours:</p>
+        <ul>
+          <li v-for="hour in business.operatingHours" :key="hour.day">
+            {{ hour.day }}: {{ hour.open }} - {{ hour.close }}
+          </li>
+        </ul>
+        <p>Contact:</p>
+        <p>Phone: {{ business.contact.phone }}</p>
+        <p>Email: {{ business.contact.email }}</p>
+        <div class="card-actions">
+          <button @click="viewBusiness(business._id)">View Details</button>
+          <button @click="viewFullProfile(business._id)">
+            Full Business Profile
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { ref, reactive, computed } from 'vue';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { reactive, computed } from "vue";
+import { useRouter } from "vue-router";
 
-export default {
-  setup() {
-    const router = useRouter();
-    const businesses = ref([]);
-    const filter = reactive({
-      location: '',
-      category: '',
-      reviews: '',
-    });
+interface OperatingHour {
+  day: string;
+  open: string;
+  close: string;
+}
 
-    async function fetchBusinesses() {
-      try {
-        const response = await fetch('/api/businesses');
-        businesses.value = await response.json();
-      } catch (error) {
-        console.error('Error fetching businesses:', error);
-        businesses.value = [];
-      }
-    }
+interface Contact {
+  phone: string;
+  email: string;
+}
 
-    const filteredBusinesses = computed(() => {
-      return businesses.value.filter(business => {
-        return (
-          (!filter.location || business.location.includes(filter.location)) &&
-          (!filter.category || business.category === filter.category) &&
-          (!filter.reviews || business.reviews >= filter.reviews)
-        );
-      });
-    });
+interface Business {
+  _id: string;
+  name: string;
+  category: string;
+  location: string;
+  operatingHours: OperatingHour[];
+  contact: Contact;
+  reviews: number;
+}
 
-    function viewBusiness(id) {
-      router.push(`/business/${id}`);
-    }
+interface Filter {
+  location: string;
+  category: string;
+  reviews: number | "";
+}
 
-    function viewFullProfile(id) {
-      router.push(`/businessProfile/${id}`);
-    }
+const router = useRouter();
+const filter = reactive<Filter>({
+  location: "",
+  category: "",
+  reviews: "",
+});
 
-    fetchBusinesses();
+// Fetch businesses using Nuxt's useFetch
+const { data: businesses, error } = await useFetch<Business[]>(
+  "/api/businesses"
+);
 
-    return {
-      filter,
-      businesses,
-      filteredBusinesses,
-      viewBusiness,
-      viewFullProfile,
-    };
-  }
+// Filtered businesses
+const filteredBusinesses = computed(() => {
+  if (!businesses.value) return [];
+  return businesses.value.filter((business) => {
+    const matchesLocation =
+      !filter.location ||
+      business.location.toLowerCase().includes(filter.location.toLowerCase());
+    const matchesCategory =
+      !filter.category || business.category === filter.category;
+    const matchesReviews =
+      filter.reviews === "" ||
+      (business.reviews >= Number(filter.reviews) && business.reviews <= 5);
+    return matchesLocation && matchesCategory && matchesReviews;
+  });
+});
+
+// Navigation functions
+const viewBusiness = (id: string) => {
+  router.push(`/business/${id}`);
+};
+
+const viewFullProfile = (id: string) => {
+  router.push(`/businessProfile/${id}`);
 };
 </script>
 
 <style scoped>
+.filters {
+  display: flex;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+
+.filters input,
+.filters select {
+  padding: 0.5em;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.no-businesses {
+  margin: 1em 0;
+  font-weight: bold;
+  color: #777;
+}
+
 .business-cards {
   display: flex;
   flex-wrap: wrap;

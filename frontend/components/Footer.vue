@@ -4,39 +4,36 @@
       <div class="footer-left">
         <h3>About BizFind</h3>
         <p>
-          BizFind is your ultimate business directory, connecting customers with businesses seamlessly.
+          BizFind is your ultimate business directory, connecting customers with
+          businesses seamlessly.
         </p>
       </div>
       <div class="footer-middle">
         <h3>Quick Links</h3>
         <ul>
-          <li><nuxt-link to="/">Home</nuxt-link></li>
-          <li><nuxt-link to="/businesses">Businesses</nuxt-link></li>
-          <li><nuxt-link to="/about">About Us</nuxt-link></li>
-          <li><nuxt-link to="/contact">Contact Us</nuxt-link></li>
+          <li><NuxtLink to="/">Home</NuxtLink></li>
+          <li><NuxtLink to="/businesses">Businesses</NuxtLink></li>
+          <li><NuxtLink to="/about">About Us</NuxtLink></li>
+          <li><NuxtLink to="/contact">Contact Us</NuxtLink></li>
         </ul>
       </div>
       <div class="footer-right">
         <h3>Contact Information</h3>
         <p>
-          Address: 2500 Main St, Eldoret<br>
-          Phone: +254716517145/ +254742584681<br>
+          Address: 2500 Main St, Eldoret<br />
+          Phone: +254716517145 / +254742584681<br />
           Email: bizfind@gmail.com
         </p>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2024 BizFind. All rights reserved.</p>
+      <p>&copy; {{ currentYear }} BizFind. All rights reserved.</p>
     </div>
   </footer>
 </template>
 
-<script>
-export default {
-  setup() {
-    // No setup needed for this component
-  },
-};
+<script setup lang="ts">
+const currentYear = new Date().getFullYear();
 </script>
 
 <style scoped>
@@ -51,6 +48,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .footer-left,
@@ -58,6 +56,7 @@ export default {
 .footer-right {
   flex: 1;
   margin-right: 20px;
+  min-width: 200px;
 }
 
 .footer-left h3,

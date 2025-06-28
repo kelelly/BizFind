@@ -1,0 +1,1 @@
+export { default } from "C:/Users/HP/Desktop/Project/BizFind/frontend/node_modules/@nuxt/image/dist/runtime/components/NuxtImg.vue"

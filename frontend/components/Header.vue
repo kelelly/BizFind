@@ -6,21 +6,17 @@
     </div>
     <nav class="nav">
       <ul>
-        <li><nuxt-link to="/">Home</nuxt-link></li>
-        <li><nuxt-link to="/businesses">Businesses</nuxt-link></li>
-        <li><nuxt-link to="/about">About</nuxt-link></li>
-        <li><nuxt-link to="/contact">Contact</nuxt-link></li>
+        <li><NuxtLink to="/">Home</NuxtLink></li>
+        <li><NuxtLink to="/businesses">Businesses</NuxtLink></li>
+        <li><NuxtLink to="/about">About</NuxtLink></li>
+        <li><NuxtLink to="/contact">Contact</NuxtLink></li>
       </ul>
     </nav>
   </header>
 </template>
 
-<script>
-let Header = {
-  setup() {
-    // No setup needed for this component
-  },
-};
+<script setup lang="ts">
+// No additional logic required for this component
 </script>
 
 <style scoped>

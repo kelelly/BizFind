@@ -1,7 +1,33 @@
 <template>
   <div class="login">
     <h2>Login</h2>
-    <form @submit.prevent="login">
+
+    <!-- Tabs -->
+    <div class="login-tabs">
+      <button
+        :class="{ active: selectedAccountType === 'business' }"
+        @click="selectAccountType('business')"
+      >
+        Business
+      </button>
+      <button
+        :class="{ active: selectedAccountType === 'user' }"
+        @click="selectAccountType('user')"
+      >
+        User
+      </button>
+    </div>
+
+    <!-- Business Login Form -->
+    <form
+      v-if="selectedAccountType === 'business'"
+      @submit.prevent="handleBusinessLogin"
+      class="login-form"
+    >
+      <label>
+        Business Name:
+        <input type="text" v-model="businessName" required />
+      </label>
       <label>
         Email:
         <input type="email" v-model="email" required />
@@ -10,62 +36,108 @@
         Password:
         <input type="password" v-model="password" required />
       </label>
-      <label>
-        <input type="radio" value="user" v-model="accountType" /> User
-        <input type="radio" value="business" v-model="accountType" /> Business
-      </label>
-      <button type="submit">Login</button>
-      <p>
-        Don't have an account? <a @click="$router.push({ name: 'Register' })">Register here</a>
-      </p>
-      <p>
-        <a @click="$router.push({ name: 'ForgotPassword' })">Forgot Password?</a>
-      </p>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? "Logging in..." : "Login as Business" }}
+      </button>
     </form>
+
+    <!-- User Login Form -->
+    <form
+      v-else-if="selectedAccountType === 'user'"
+      @submit.prevent="handleUserLogin"
+      class="login-form"
+    >
+      <label>
+        Email:
+        <input type="email" v-model="email" required />
+      </label>
+      <label>
+        Password:
+        <input type="password" v-model="password" required />
+      </label>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? "Logging in..." : "Login as User" }}
+      </button>
+    </form>
+
+    <!-- Links -->
+    <p>
+      Don't have an account?
+      <nuxt-link to="/register">Register here</nuxt-link>
+    </p>
+    <p>
+      <nuxt-link to="/forgot-password">Forgot Password?</nuxt-link>
+    </p>
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-let Login = {
-  setup() {
-    const router = useRouter();
-    const email = ref('');
-    const password = ref('');
-    const accountType = ref('user');
+const selectedAccountType = ref<"business" | "user" | null>(null);
+const email = ref("");
+const password = ref("");
+const businessName = ref("");
+const isSubmitting = ref(false);
 
-    const login = async () => {
-      try {
-        const endpoint = accountType.value === 'business' ? '/api/business/login' : '/api/users/login';
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: email.value,
-            password: password.value
-          })
-        });
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        const redirectRoute = accountType.value === 'business' ? 'BusinessDashboard' : 'UserDashboard';
-        router.push({ name: redirectRoute });
-      } catch (error) {
-        console.error('Error logging in:', error);
-        alert('Login failed. Please check your credentials.');
-      }
-    };
+const router = useRouter();
 
-    return {
-      email,
-      password,
-      accountType,
-      login,
-    };
-  },
+const selectAccountType = (type: "business" | "user") => {
+  selectedAccountType.value = type;
+  // Reset fields when switching
+  email.value = "";
+  password.value = "";
+  businessName.value = "";
+};
+
+const handleBusinessLogin = async () => {
+  isSubmitting.value = true;
+  try {
+    const response = await fetch("/api/business/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        businessName: businessName.value,
+        email: email.value,
+        password: password.value,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Invalid Business credentials");
+
+    const { token } = await response.json();
+    localStorage.setItem("token", token);
+    router.push({ name: "BusinessDashboard" });
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const handleUserLogin = async () => {
+  isSubmitting.value = true;
+  try {
+    const response = await fetch("/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Invalid User credentials");
+
+    const { token } = await response.json();
+    localStorage.setItem("token", token);
+    router.push({ name: "UserDashboard" });
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>
 
@@ -74,45 +146,74 @@ let Login = {
   max-width: 600px;
   margin: 0 auto;
   padding: 2em;
-  background-color: #ffffff; /* White background */
-  color: #1b1b1b; /* Dark blue (almost black) text color */
+  background-color: #fff;
+  color: #1b1b1b;
 }
 
 .login h2 {
   margin-bottom: 1em;
+  text-align: center;
 }
 
-.login form {
+.login-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5em;
+  flex-wrap: wrap;
+}
+
+.login-tabs button {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.75em;
+  margin: 0.25em;
+  border: 1px solid #007bff;
+  background-color: white;
+  color: #007bff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.login-tabs button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.login-form {
   display: flex;
   flex-direction: column;
 }
 
-.login form label {
+.login-form label {
   margin-bottom: 0.5em;
 }
 
-.login form input {
+.login-form input {
   margin-bottom: 1em;
   padding: 0.5em;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.login form button {
+.login-form button {
   background-color: #007bff;
   color: white;
   border: none;
   padding: 0.5em 1em;
   cursor: pointer;
   border-radius: 4px;
+  transition: background-color 0.3s;
 }
 
-.login form button:hover {
+.login-form button:hover {
   background-color: #0056b3;
 }
 
 .login p {
   margin-top: 1em;
+  text-align: center;
 }
 
 .login a {
@@ -122,5 +223,12 @@ let Login = {
 
 .login a:hover {
   text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-tabs {
+    flex-direction: column;
+  }
 }
 </style>

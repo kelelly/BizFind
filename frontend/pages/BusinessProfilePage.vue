@@ -4,13 +4,8 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
-import BusinessProfile from '~/components/businessProfile.vue';
-
-export default defineComponent({
-  components: { BusinessProfile }
-});
+<script setup lang="ts">
+import BusinessProfile from "~/components/businessProfile.vue";
 </script>
 
 <style scoped>

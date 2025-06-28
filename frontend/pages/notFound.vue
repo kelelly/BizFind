@@ -2,16 +2,17 @@
   <div class="not-found">
     <h1>404 - Page Not Found</h1>
     <p>
-      Sorry, the page you are looking for does not exist. It might have been moved or deleted.
+      Sorry, the page you are looking for does not exist. It might have been
+      moved or deleted.
     </p>
     <p>
-      <router-link to="/">Return to Home</router-link>
+      <NuxtLink to="/">Return to Home</NuxtLink>
     </p>
   </div>
 </template>
 
-<script>
-export const NotFound = {};
+<script setup lang="ts">
+// No additional TypeScript code needed for this component
 </script>
 
 <style scoped>

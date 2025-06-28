@@ -5,7 +5,10 @@
     <p>Address: {{ business.address }}</p>
     <p>Phone: {{ business.phone }}</p>
     <p>Email: {{ business.email }}</p>
-    <p>Website: <a :href="business.website" target="_blank">{{ business.website }}</a></p>
+    <p>
+      Website:
+      <a :href="business.website" target="_blank">{{ business.website }}</a>
+    </p>
     <p>Description: {{ business.description }}</p>
 
     <h2>Operating Hours</h2>
@@ -17,10 +20,7 @@
 
     <h2>Location</h2>
     <p>
-      <a
-        :href="getMapUrl(business.location.coordinates)"
-        target="_blank"
-      >
+      <a :href="getMapUrl(business.location.coordinates)" target="_blank">
         View on Map
       </a>
     </p>
@@ -29,42 +29,50 @@
   </div>
 </template>
 
-<script>
-import { ref, reactive } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+<script setup lang="ts">
+import { useRoute, useRouter } from "vue-router";
 
-export default {
-  setup() {
-    const router = useRouter();
-    const route = useRoute();
-    const business = ref({});
+interface OperatingHour {
+  day: string;
+  open: string;
+  close: string;
+}
 
-    async function fetchBusinessDetails() {
-      try {
-        const response = await fetch(`/api/businesses/${route.params.id}`);
-        business.value = await response.json();
-      } catch (error) {
-        console.error('Error fetching business details:', error);
-        business.value = {};
-      }
-    }
+interface Location {
+  coordinates: [number, number]; // [longitude, latitude]
+}
 
-    function getMapUrl([longitude, latitude]) {
-      // Construct the HERE Maps URL with the coordinates
-      return `https://wego.here.com/?map=${latitude},${longitude},14`;
-    }
+interface Business {
+  _id: string;
+  name: string;
+  category: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  description: string;
+  operatingHours: OperatingHour[];
+  location: Location;
+}
 
-    function goToProducts() {
-      router.push(`/products/${business.value._id}`);
-    }
+const route = useRoute();
+const router = useRouter();
 
-    fetchBusinessDetails();
+// Dynamically construct the API endpoint using the route parameter
+const { data: business, error } = await useFetch<Business>(
+  () => `/api/businesses/${route.params.id}`
+);
 
-    return {
-      business,
-      getMapUrl,
-      goToProducts,
-    };
+// Function to generate the HERE Maps URL
+const getMapUrl = (coordinates: [number, number]) => {
+  const [longitude, latitude] = coordinates;
+  return `https://wego.here.com/?map=${latitude},${longitude},14`;
+};
+
+// Navigate to the products page for the business
+const goToProducts = () => {
+  if (business.value?._id) {
+    router.push(`/products/${business.value._id}`);
   }
 };
 </script>
@@ -93,7 +101,7 @@ export default {
 }
 
 .business-profile a {
-  color: #007BFF;
+  color: #007bff;
   text-decoration: none;
 }
 
@@ -104,7 +112,7 @@ export default {
 button {
   margin-top: 1em;
   padding: 0.5em 1em;
-  background-color: #007BFF;
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;

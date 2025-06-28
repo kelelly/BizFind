@@ -1,21 +1,21 @@
-// backend/routes/locationRoutes.js
-
-const express = require('express');
-const router = express.Router();
+const express = require("express");
 const {
   getBusinessesNearLocation,
   updateBusinessLocation,
-  getGeocodeData
-} = require('../controllers/locationController');
-const { isAuthenticated } = require('../middleware/auth'); // Importing the session-based auth middleware
+  getGeocodeData,
+} = require("../controllers/locationController");
+const { isAuthenticated, isBusinessOwner } = require("../middleware/auth");
 
-// Route to get businesses near a specific location
-router.get('/nearby', getBusinessesNearLocation);
+const router = express.Router();
 
-// Route to update the location of a business (requires authentication)
-router.put('/:businessId/location', isAuthenticated, updateBusinessLocation);
+// Public routes
+router.get("/nearby", getBusinessesNearLocation); // Find nearby businesses by geo-coordinates
+router.get("/geocode", getGeocodeData); // Retrieve geocode information from HERE Maps API
 
-// Route to get geocode data from HERE Maps API
-router.get('/geocode', getGeocodeData);
+// Apply JWT authentication to all routes below
+router.use(isAuthenticated);
+
+// Protected route: only the owner of the business may update its location
+router.put("/:businessId/location", isBusinessOwner, updateBusinessLocation);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 // backend/controllers/reviewController.js
-const Review = require('../models/Review');
-const Business = require('../models/Business');
+const Review = require("../models/Review");
+const Business = require("../models/Business");
 
 // Add a new review for a business
 exports.addReview = async (req, res) => {
@@ -12,7 +12,7 @@ exports.addReview = async (req, res) => {
     // Check if the business exists
     const business = await Business.findById(businessId);
     if (!business) {
-      return res.status(404).json({ message: 'Business not found' });
+      return res.status(404).json({ message: "Business not found" });
     }
 
     // Create and save the new review
@@ -21,7 +21,7 @@ exports.addReview = async (req, res) => {
 
     res.status(201).json(newReview);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -34,7 +34,7 @@ exports.getReviewsForBusiness = async (req, res) => {
 
     res.json(reviews);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -45,12 +45,12 @@ exports.getReviewById = async (req, res) => {
 
     const review = await Review.findById(id);
     if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
+      return res.status(404).json({ message: "Review not found" });
     }
 
     res.json(review);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -62,12 +62,12 @@ exports.updateReview = async (req, res) => {
 
     const review = await Review.findByIdAndUpdate(id, updates, { new: true });
     if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
+      return res.status(404).json({ message: "Review not found" });
     }
 
     res.json(review);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -78,11 +78,11 @@ exports.deleteReview = async (req, res) => {
 
     const review = await Review.findByIdAndDelete(id);
     if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
+      return res.status(404).json({ message: "Review not found" });
     }
 
-    res.json({ message: 'Review deleted successfully' });
+    res.json({ message: "Review deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };

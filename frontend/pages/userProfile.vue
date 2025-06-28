@@ -2,69 +2,63 @@
   <!-- same template as before -->
 </template>
 
-<script>
-import { ref, onMounted } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 
-export default {
-  setup() {
-    const user = ref({
-      username: '',
-      email: '',
-      password: ''
-    });
-    const newPassword = ref('');
-    const view = ref('profile'); // Default view
-
-    async function fetchUserProfile() {
-      try {
-        const response = await fetch('/api/users/profile');
-        user.value = await response.json();
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    }
-
-    async function updateProfile() {
-      try {
-        const { password,...userData } = user.value;
-        await fetch('/api/users/profile', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({...userData, password })
-        });
-        alert('Profile updated successfully!');
-      } catch (error) {
-        console.error('Error updating profile:', error);
-        alert('Profile update failed. Please try again.');
-      }
-    }
-
-    async function resetPassword() {
-      try {
-        await fetch('/api/users/reset-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: newPassword.value })
-        });
-        alert('Password reset successful!');
-        newPassword.value = ''; // Clear the new password field
-      } catch (error) {
-        console.error('Error resetting password:', error);
-        alert('Password reset failed. Please try again.');
-      }
-    }
-
-    onMounted(fetchUserProfile);
-
-    return {
-      user,
-      newPassword,
-      view,
-      updateProfile,
-      resetPassword
-    };
-  }
+interface User {
+  username: string;
+  email: string;
+  password: string;
 }
+
+const user = ref<User>({
+  username: "",
+  email: "",
+  password: "",
+});
+const newPassword = ref<string>("");
+const view = ref<string>("profile"); // Default view
+
+const fetchUserProfile = async (): Promise<void> => {
+  try {
+    const response = await fetch("/api/users/profile");
+    user.value = await response.json();
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+};
+
+const updateProfile = async (): Promise<void> => {
+  try {
+    const { password, ...userData } = user.value;
+    await fetch("/api/users/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...userData, password }),
+    });
+    alert("Profile updated successfully!");
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    alert("Profile update failed. Please try again.");
+  }
+};
+
+const resetPassword = async (): Promise<void> => {
+  try {
+    await fetch("/api/users/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: newPassword.value }),
+    });
+    alert("Password reset successful!");
+    newPassword.value = ""; // Clear the new password field
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    alert("Password reset failed. Please try again.");
+  }
+};
+
+onMounted(fetchUserProfile);
 </script>
 
 <style scoped>

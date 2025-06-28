@@ -1,2 +1,0 @@
-import { DefaultRefreshHandler } from 'C:/Users/HP/Desktop/Senior Project/BizFind/frontend/node_modules/@sidebase/nuxt-auth/dist/runtime/utils/refreshHandler'
-export const _refreshHandler = new DefaultRefreshHandler({"enablePeriodically":false,"enableOnWindowFocus":true})

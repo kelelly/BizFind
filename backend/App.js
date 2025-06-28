@@ -1,19 +1,38 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
-const winston = require('winston');
-const session = require('express-session');
-const { getSessionSecret } = require('./utils/auth');
+// backend/app.js
 
-// Load environment variables from .env file
+const express = require("express");
+const bodyParser = require("body-parser");
+const dotenv = require("dotenv");
+const winston = require("winston");
+const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
+const morgan = require("morgan");
+
+// Load environment variables
 dotenv.config();
 
 // Initialize Express
 const app = express();
 
+// Serve static files from the 'public' directory
+app.use(express.static("public"));
+
+// Middleware
+app.use(helmet()); // Set security-related HTTP headers
+app.use(compression()); // Enable GZIP compression
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL, // Update with your frontend URL
+    credentials: true,
+  })
+);
+app.use(bodyParser.json());
+app.use(morgan("dev")); // HTTP request logging
+
 // Setup logging with winston
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   format: winston.format.combine(
     winston.format.colorize(),
     winston.format.timestamp(),
@@ -27,69 +46,58 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'combined.log' }),
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: "combined.log" }),
+    new winston.transports.File({ filename: "error.log", level: "error" }),
   ],
 });
 
-// Middleware for parsing JSON bodies
-app.use(bodyParser.json());
-
-// Session management setup
-app.use(session({
-  secret: getSessionSecret(), // Use the secret from the utils
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' }, // Use secure cookies in production
-}));
-
 // Import route modules
-const authRoutes = require('./routes/authRoutes');
-const businessRoutes = require('./routes/businessRoutes');
-const locationRoutes = require('./Routes/locationRoutes');
-const productRoutes = require('./routes/productRoutes');
-const reviewRoutes = require('./routes/ReviewRoutes');
+const authRoutes = require("./routes/authRoutes");
+const businessRoutes = require("./routes/businessRoutes");
+const locationRoutes = require("./routes/locationRoutes");
+const productRoutes = require("./routes/productRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 // Apply routes
-app.use('/api/auth', authRoutes);
-app.use('/api/business', businessRoutes);
-app.use('/api/location', locationRoutes);
-app.use('/api/product', productRoutes);
-app.use('/api/review', reviewRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/business", businessRoutes);
+app.use("/api/location", locationRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/review", reviewRoutes);
 
 // Home route
-app.get('/', (req, res) => {
-  res.send('BizFind Server');
+app.get("/", (req, res) => {
+  res.send("BizFind Server");
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  logger.error('Unhandled Error:', err);
+  logger.error("Unhandled Error:", err);
   res.status(err.status || 500).json({
-    message: err.message || 'Internal Server Error',
+    message: err.message || "Internal Server Error",
   });
 });
 
 // Unhandled promise rejections and uncaught exceptions
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception:', error);
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught Exception:", error);
   process.exit(1);
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || 'localhost';
+const PORT = process.env.PORT || 4000;
+const HOST = process.env.HOST || "localhost";
 
 const startServer = async () => {
   try {
     await app.listen(PORT, HOST);
     logger.info(`Server is running on http://${HOST}:${PORT}/`);
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    logger.error("Failed to start server:", error);
     process.exit(1);
   }
 };
