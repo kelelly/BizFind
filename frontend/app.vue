@@ -5,7 +5,23 @@
 </template>
 
 <script setup lang="ts">
-// Global app setup
+import { useAuth } from "~/composables/useAuth";
+import { useUserStore } from "~/stores/user";
+import { onMounted } from "vue";
+import { supabase } from "~/utils/supabase";
+
+const { getSession } = useAuth();
+const userStore = useUserStore();
+
+// Fetch initial session on app load
+onMounted(async () => {
+  await getSession();
+});
+
+// Realtime auth state tracking
+supabase.auth.onAuthStateChange((event, session) => {
+  userStore.setUser(session?.user || null);
+});
 </script>
 
 <style>

@@ -16,15 +16,14 @@
       </label>
       <button type="submit">Register</button>
     </form>
-    <p>
-      Already have an account? <NuxtLink to="/login">Login here</NuxtLink>
-    </p>
+    <p>Already have an account? <NuxtLink to="/login">Login here</NuxtLink></p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useSupabase } from "@/composables/useSupabase";
 
 interface User {
   username: string;
@@ -39,23 +38,44 @@ const user = ref<User>({
 });
 
 const router = useRouter();
+const supabase = useSupabase();
 
 const register = async (): Promise<void> => {
   try {
-    const response = await fetch("/api/users/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user.value),
+    // 1. Sign up the user in Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email: user.value.email,
+      password: user.value.password,
     });
 
-    if (!response.ok) {
-      throw new Error("Registration failed");
+    if (error) {
+      console.error("Supabase sign up error:", error.message);
+      alert("Registration failed. " + error.message);
+      return;
     }
 
-    alert("Registration successful! Please log in.");
+    const userId = data.user?.id;
+
+    // 2. Save additional profile data if user was created
+    if (userId) {
+      const { error: profileError } = await supabase.from("profiles").insert([
+        {
+          id: userId,
+          username: user.value.username,
+        },
+      ]);
+
+      if (profileError) {
+        console.error("Error saving profile data:", profileError.message);
+        alert("Profile save failed. Please try again.");
+        return;
+      }
+    }
+
+    alert("Registration successful! Please check your email to confirm.");
     router.push("/login");
-  } catch (error) {
-    console.error("Error registering:", error);
+  } catch (error: any) {
+    console.error("Error registering:", error?.message || error);
     alert("Registration failed. Please try again.");
   }
 };

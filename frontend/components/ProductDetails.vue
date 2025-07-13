@@ -8,14 +8,20 @@
     <p><strong>Available Quantity:</strong> {{ product.quantity }}</p>
     <button @click="addToCart">Add to Cart</button>
   </div>
-  <div v-else>
+
+  <div v-else-if="loading">
     <p>Loading product details...</p>
+  </div>
+
+  <div v-else>
+    <p>Product not found.</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useProductData } from "@/composables/useProductData";
 
 interface Product {
   id: string;
@@ -25,20 +31,27 @@ interface Product {
   price: number;
   quantity: number;
   imageUrl?: string;
+  businessId: string;
 }
 
 const product = ref<Product | null>(null);
+const loading = ref(true);
+
 const route = useRoute();
+const { getProductById } = useProductData();
 
 const fetchProductDetails = async () => {
-  try {
-    const productId = route.params.id as string;
-    const response = await fetch(`/api/products/${productId}`);
-    if (!response.ok) throw new Error("Failed to fetch product details");
-    product.value = await response.json();
-  } catch (error) {
-    console.error("Error fetching product details:", error);
+  const productId = route.params.id as string;
+
+  const { data, error } = await getProductById(productId);
+
+  if (error) {
+    console.error("Error fetching product:", error.message);
+  } else {
+    product.value = data;
   }
+
+  loading.value = false;
 };
 
 const addToCart = () => {
@@ -81,3 +94,4 @@ onMounted(fetchProductDetails);
   background-color: #0056b3;
 }
 </style>
+~/composables/useProducts

@@ -1,16 +1,13 @@
 export const BusinessCard = () => import('./../../components/BusinessCard.vue')
-export const Footer = () => import('./../../components/Footer.vue')
-export const Header = () => import('./../../components/Header.vue')
-export const Login = () => import('./../../components/Login.vue')
 export const Map = () => import('./../../components/Map.vue')
 export const MapSearch = () => import('./../../components/MapSearch.vue')
 export const ProductDetails = () => import('./../../components/ProductDetails.vue')
 export const ProductList = () => import('./../../components/ProductList.vue')
-export const BusinesLogin = () => import('./../../components/businesLogin.vue')
 export const BusinessAddProduct = () => import('./../../components/businessAddProduct.vue')
 export const BusinessCreateAccount = () => import('./../../components/businessCreateAccount.vue')
 export const BusinessEdit = () => import('./../../components/businessEdit.vue')
 export const BusinessList = () => import('./../../components/businessList.vue')
+export const BusinessLogin = () => import('./../../components/businessLogin.vue')
 export const BusinessProfile = () => import('./../../components/businessProfile.vue')
 export const LayoutAppFooter = () => import('./../../components/layout/AppFooter.vue')
 export const LayoutAppHeader = () => import('./../../components/layout/AppHeader.vue')
@@ -47,4 +44,4 @@ export const Html = () => import('./../../node_modules/nuxt/dist/head/runtime/co
 export const Body = () => import('./../../node_modules/nuxt/dist/head/runtime/components')
 export const NuxtIsland = () => import('./../../node_modules/nuxt/dist/app/components/nuxt-island')
 export const globalComponents: string[] = ["ProseA","ProseBlockquote","ProseCode","ProseEm","ProseH1","ProseH2","ProseH3","ProseH4","ProseH5","ProseH6","ProseHr","ProseImg","ProseLi","ProseOl","ProseP","ProsePre","ProseScript","ProseStrong","ProseTable","ProseTbody","ProseTd","ProseTh","ProseThead","ProseTr","ProseUl"]
-export const localComponents: string[] = ["BusinessCard","Footer","Header","Login","Map","MapSearch","ProductDetails","ProductList","BusinesLogin","BusinessAddProduct","BusinessCreateAccount","BusinessEdit","BusinessList","BusinessProfile","LayoutAppFooter","LayoutAppHeader","LogoutButton","UserCreateAccount","UserLogin","NuxtWelcome","NuxtLayout","NuxtErrorBoundary","ClientOnly","DevOnly","ServerPlaceholder","NuxtLink","NuxtLoadingIndicator","NuxtTime","NuxtRouteAnnouncer","NuxtImg","NuxtPicture","ContentRenderer","MDC","MDCCached","MDCRenderer","MDCSlot","ColorScheme","NuxtPage","NoScript","Link","Base","Title","Meta","Style","Head","Html","Body","NuxtIsland"]
+export const localComponents: string[] = ["BusinessCard","Map","MapSearch","ProductDetails","ProductList","BusinessAddProduct","BusinessCreateAccount","BusinessEdit","BusinessList","BusinessLogin","BusinessProfile","LayoutAppFooter","LayoutAppHeader","LogoutButton","UserCreateAccount","UserLogin","NuxtWelcome","NuxtLayout","NuxtErrorBoundary","ClientOnly","DevOnly","ServerPlaceholder","NuxtLink","NuxtLoadingIndicator","NuxtTime","NuxtRouteAnnouncer","NuxtImg","NuxtPicture","ContentRenderer","MDC","MDCCached","MDCRenderer","MDCSlot","ColorScheme","NuxtPage","NoScript","Link","Base","Title","Meta","Style","Head","Html","Body","NuxtIsland"]

@@ -16,14 +16,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useSupabase } from "@/composables/useSupabase";
 
 interface SearchResult {
-  _id: string;
+  id: string;
   name: string;
   description: string;
+  // add any other fields you want
 }
+
+const supabase = useSupabase();
 
 const router = useRouter();
 const query = ref<string>("");
@@ -33,13 +37,18 @@ const loading = ref<boolean>(true);
 const fetchResults = async (): Promise<void> => {
   loading.value = true;
   try {
-    const response = await fetch(`/api/search?query=${encodeURIComponent(query.value)}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    results.value = await response.json();
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("*")
+      .or(`name.ilike.%${query.value}%,description.ilike.%${query.value}%`);
+
+    if (error) {
+      console.error("Supabase error fetching search results:", error.message);
+      results.value = [];
+      return;
+    }
+
+    results.value = data || [];
   } catch (error) {
     console.error("Error fetching search results:", error);
     results.value = [];
@@ -48,6 +57,7 @@ const fetchResults = async (): Promise<void> => {
   }
 };
 
+// Watch the query parameter and refetch
 watch(
   () => router.currentRoute.value.query.query,
   async (newQuery) => {
@@ -56,13 +66,16 @@ watch(
   }
 );
 
-if (router.currentRoute.value.query.query) {
-  query.value = typeof router.currentRoute.value.query.query === "string" 
-    ? router.currentRoute.value.query.query 
-    : "";
-}
-
-fetchResults();
+// Initial fetch if query param exists
+onMounted(async () => {
+  if (router.currentRoute.value.query.query) {
+    query.value =
+      typeof router.currentRoute.value.query.query === "string"
+        ? router.currentRoute.value.query.query
+        : "";
+  }
+  await fetchResults();
+});
 </script>
 
 <style scoped>

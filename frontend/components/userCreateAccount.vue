@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useAuth } from "@/composables/useAuth";
 
 interface User {
   username: string;
@@ -39,20 +40,28 @@ const user = ref<User>({
 
 const isSubmitting = ref(false);
 const router = useRouter();
+const { signUp } = useAuth();
 
-const registerUser = async (): Promise<void> => {
+const registerUser = async () => {
   isSubmitting.value = true;
+
   try {
-    const response = await fetch("/api/users/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user.value),
-    });
-    alert("User registered successfully");
+    const { error } = await signUp(
+      user.value.email,
+      user.value.password,
+      user.value.username
+    );
+
+    if (error) {
+      alert("Registration failed. " + error.message);
+      return;
+    }
+
+    alert("Account created! Please check your email to confirm.");
     router.push("/user-login");
-  } catch (error) {
-    console.error("Registration failed:", error);
-    alert("Registration failed");
+  } catch (err: any) {
+    console.error("Registration error:", err.message || err);
+    alert("Registration failed. " + (err.message || ""));
   } finally {
     isSubmitting.value = false;
   }

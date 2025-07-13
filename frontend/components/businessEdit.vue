@@ -34,123 +34,104 @@
         Location (latitude, longitude):
         <input
           type="text"
-          v-model="business.location"
+          v-model="locationInput"
           placeholder="e.g., 40.7128,-74.0060"
+          required
         />
       </label>
       <label>
         Operating Hours:
-        <div v-for="(hour, index) in business.operatingHours" :key="index">
-          <input type="text" v-model="hour.day" placeholder="Day" required />
-          <input
-            type="text"
-            v-model="hour.open"
-            placeholder="Open Time"
-            required
-          />
-          <input
-            type="text"
-            v-model="hour.close"
-            placeholder="Close Time"
-            required
-          />
-          <button @click="removeOperatingHour(index)">Remove</button>
+        <div v-for="(hour, index) in business.operating_hours" :key="index">
+          <input v-model="hour.day" placeholder="Day" required />
+          <input v-model="hour.open" placeholder="Open Time" required />
+          <input v-model="hour.close" placeholder="Close Time" required />
+          <button @click.prevent="removeOperatingHour(index)">Remove</button>
         </div>
-        <button @click="addOperatingHour">Add Operating Hour</button>
+        <button @click.prevent="addOperatingHour">Add Operating Hour</button>
       </label>
       <button type="submit">Update Profile</button>
     </form>
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { useBusiness } from "~/composables/useBusiness";
 
-interface OperatingHour {
-  day: string;
-  open: string;
-  close: string;
-}
+const route = useRoute();
+const router = useRouter();
+const { $toast } = useNuxtApp();
 
-interface Business {
-  _id?: string;
-  name: string;
-  category: string;
-  phone: string;
-  email: string;
-  website: string;
-  address: string;
-  description: string;
-  location: string;
-  operatingHours: OperatingHour[];
-}
-
-export default {
-  setup() {
-    const router = useRouter();
-    const route = useRoute();
-
-    const business = reactive<Business>({
-      name: "",
-      category: "",
-      phone: "",
-      email: "",
-      website: "",
-      address: "",
-      description: "",
-      location: "",
-      operatingHours: [],
-    });
-
-    const fetchBusinessDetails = async () => {
-      try {
-        const response = await fetch(`/api/business/${route.params.id}`);
-        if (!response.ok) throw new Error("Failed to fetch business");
-        const data = await response.json();
-        Object.assign(business, data);
-      } catch (error) {
-        console.error("Error fetching business details:", error);
-      }
-    };
-
-    const updateBusiness = async () => {
-      try {
-        const response = await fetch(`/api/business/${business._id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(business),
-        });
-
-        if (!response.ok) throw new Error("Failed to update business");
-        alert("Business profile updated successfully!");
-        router.push({ name: "BusinessProfile", params: { id: business._id } });
-      } catch (error) {
-        console.error("Error updating business:", error);
-        alert("Failed to update business profile. Please try again.");
-      }
-    };
-
-    const addOperatingHour = () => {
-      business.operatingHours.push({ day: "", open: "", close: "" });
-    };
-
-    const removeOperatingHour = (index: number) => {
-      business.operatingHours.splice(index, 1);
-    };
-
-    onMounted(() => {
-      fetchBusinessDetails();
-    });
-
-    return {
-      business,
-      updateBusiness,
-      addOperatingHour,
-      removeOperatingHour,
-    };
+const business = reactive({
+  id: "",
+  name: "",
+  category: "",
+  phone: "",
+  email: "",
+  website: "",
+  address: "",
+  description: "",
+  location: {
+    type: "Point",
+    coordinates: [0, 0], // [lng, lat]
   },
+  operating_hours: [] as Array<{ day: string; open: string; close: string }>,
+});
+
+const locationInput = ref(""); // bound to input as string "lat,lng"
+
+const fetchBusinessDetails = async () => {
+  const id = route.params.id as string;
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error(error);
+    $toast.error("Failed to load business");
+    return;
+  }
+
+  Object.assign(business, data);
+  if (business.location?.coordinates?.length === 2) {
+    locationInput.value = `${business.location.coordinates[1]},${business.location.coordinates[0]}`;
+  }
 };
+
+const updateBusiness = async () => {
+  const [lat, lng] = locationInput.value.split(",").map(Number);
+  business.location = {
+    type: "Point",
+    coordinates: [lng, lat],
+  };
+
+  const { error } = await supabase
+    .from("businesses")
+    .update(business)
+    .eq("id", business.id);
+
+  if (error) {
+    console.error(error);
+    $toast.error("Failed to update business");
+    return;
+  }
+
+  $toast.success("Business updated");
+  router.push({ name: "BusinessProfile", params: { id: business.id } });
+};
+
+const addOperatingHour = () => {
+  business.operating_hours.push({ day: "", open: "", close: "" });
+};
+
+const removeOperatingHour = (index: number) => {
+  business.operating_hours.splice(index, 1);
+};
+
+onMounted(fetchBusinessDetails);
 </script>
 
 <style scoped>
@@ -161,20 +142,16 @@ export default {
   background-color: #ffffff;
   color: #1b1b1b;
 }
-
 .business-edit h1 {
   margin-bottom: 1em;
 }
-
 .business-edit form {
   display: flex;
   flex-direction: column;
 }
-
 .business-edit form label {
   margin-bottom: 0.5em;
 }
-
 .business-edit form input,
 .business-edit form textarea {
   margin-bottom: 1em;
@@ -182,7 +159,6 @@ export default {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-
 .business-edit form button {
   background-color: #007bff;
   color: white;
@@ -191,7 +167,6 @@ export default {
   cursor: pointer;
   border-radius: 4px;
 }
-
 .business-edit form button:hover {
   background-color: #0056b3;
 }

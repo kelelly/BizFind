@@ -20,33 +20,31 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useAuth } from "@/composables/useAuth";
+
+const router = useRouter();
+const { login } = useAuth();
 
 const email = ref("");
 const password = ref("");
 const isSubmitting = ref(false);
 
-const router = useRouter();
-
-const loginUser = async (): Promise<void> => {
+const loginUser = async () => {
   isSubmitting.value = true;
+
   try {
-    const response = await fetch("/api/users/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value,
-      }),
-    });
+    const { error } = await login(email.value, password.value);
 
-    if (!response.ok) throw new Error("Invalid User credentials");
+    if (error) {
+      alert("Login failed: " + error.message);
+      return;
+    }
 
-    const { token } = await response.json();
-    localStorage.setItem("token", token);
+    alert("Login successful!");
     router.push("/user-dashboard");
-  } catch (error) {
-    console.error("Login failed:", error);
-    alert("Login failed");
+  } catch (err: any) {
+    console.error("Login error:", err);
+    alert("An error occurred. Please try again.");
   } finally {
     isSubmitting.value = false;
   }

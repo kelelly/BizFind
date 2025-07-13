@@ -26,7 +26,7 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../plugins/axios")> &
   InjectionType<typeof import("../../plugins/toast")> &
   InjectionType<typeof import("../../plugins/iconify")> &
-  InjectionType<typeof import("../../plugins/auth")> &
+  InjectionType<typeof import("../../plugins/supabase.client")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/pages/runtime/plugins/prerender.server.js")>
 
 declare module '#app' {

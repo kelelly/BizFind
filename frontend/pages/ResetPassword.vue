@@ -1,131 +1,124 @@
 <template>
-  <div class="reset-password-page">
-    <h2>Reset Password</h2>
-    <form @submit.prevent="resetPassword">
+  <div class="reset-password">
+    <h2>Reset Your Password</h2>
+
+    <form @submit.prevent="handlePasswordReset" v-if="!success">
       <label>
         New Password:
         <input type="password" v-model="newPassword" required />
       </label>
-      <button type="submit">Reset Password</button>
-      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? "Updating..." : "Update Password" }}
+      </button>
+      <p v-if="error" class="error">{{ error }}</p>
     </form>
-    <div class="navigation-buttons">
-      <button @click="step = 'register'">Create Account</button>
-      <button @click="step = 'forgotPassword'">Forgot Password</button>
-      <button @click="step = 'resetPassword'">Reset Password</button>
+
+    <div v-else class="success-message">
+      <p>✅ Your password has been successfully updated.</p>
+      <NuxtLink to="/user-login" class="back-link"> Login Now </NuxtLink>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useAuth } from "@/composables/useAuth";
 
-const newPassword = ref<string>("");
-const email = ref<string>(""); // Only used in forgot password step
-const resetToken = ref<string>("");
-const accountType = ref<string>("");
-const errorMessage = ref<string>("");
 const router = useRouter();
-const step = ref<string>("resetPassword"); // Default step
+const { updatePassword, getSession } = useAuth();
 
-const resetPassword = async (): Promise<void> => {
+const newPassword = ref("");
+const isSubmitting = ref(false);
+const success = ref(false);
+const error = ref("");
+
+const handlePasswordReset = async () => {
+  isSubmitting.value = true;
+  error.value = "";
+
   try {
-    let url: string;
-    if (accountType.value === "user") {
-      url = `/api/users/reset-password/${resetToken.value}`;
-    } else if (accountType.value === "business") {
-      url = `/api/businesses/reset-password/${resetToken.value}`;
-    } else {
-      errorMessage.value = "Invalid account type.";
-      return;
-    }
+    const { error: updateError } = await updatePassword(newPassword.value);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: newPassword.value }),
-    });
+    if (updateError) throw updateError;
 
-    if (response.ok) {
-      alert(
-        "Password reset successful! You can now log in with your new password."
-      );
-      router.push({ name: "login" }); // Redirect to login page after successful reset
-    } else {
-      console.error("Error resetting password:", response);
-      errorMessage.value = "Password reset failed. Please try again.";
-    }
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    errorMessage.value = "Password reset failed. Please try again.";
+    success.value = true;
+  } catch (err: any) {
+    console.error(err);
+    error.value = err.message || "Password reset failed.";
+  } finally {
+    isSubmitting.value = false;
   }
 };
+
+onMounted(async () => {
+  const { data, error: sessionError } = await getSession();
+  if (!data?.session) {
+    console.warn("No session found for password reset.");
+    router.push("/user-login");
+  }
+});
 </script>
 
 <style scoped>
-.reset-password-page {
-  max-width: 600px;
+.reset-password {
+  max-width: 500px;
   margin: 0 auto;
   padding: 2em;
   background-color: #ffffff;
   color: #1b1b1b;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.reset-password-page h2 {
+.reset-password h2 {
+  text-align: center;
   margin-bottom: 1em;
 }
 
-.reset-password-page form {
+.reset-password form {
   display: flex;
   flex-direction: column;
 }
 
-.reset-password-page form label {
-  margin-bottom: 0.5em;
+.reset-password label {
+  margin-bottom: 1em;
 }
 
-.reset-password-page form input {
-  margin-bottom: 1em;
+.reset-password input {
   padding: 0.5em;
   border: 1px solid #ccc;
   border-radius: 4px;
+  width: 100%;
 }
 
-.reset-password-page form button {
+.reset-password button {
   background-color: #007bff;
   color: white;
   border: none;
-  padding: 0.5em 1em;
+  padding: 0.75em;
   cursor: pointer;
   border-radius: 4px;
+  margin-top: 1em;
 }
 
-.reset-password-page form button:hover {
+.reset-password button:hover {
   background-color: #0056b3;
 }
 
-.reset-password-page .error {
+.error {
   color: red;
   margin-top: 1em;
 }
 
-.reset-password-page .navigation-buttons {
-  margin-top: 2em;
-  display: flex;
-  gap: 1em;
+.success-message {
+  text-align: center;
 }
 
-.reset-password-page .navigation-buttons button {
-  background-color: #f8f9fa;
+.success-message .back-link {
+  display: inline-block;
+  margin-top: 1em;
+  text-decoration: underline;
   color: #007bff;
-  border: 1px solid #007bff;
-  padding: 0.5em 1em;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.reset-password-page .navigation-buttons button:hover {
-  background-color: #e9ecef;
 }
 </style>

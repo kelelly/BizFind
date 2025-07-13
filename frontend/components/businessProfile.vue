@@ -1,5 +1,5 @@
 <template>
-  <div class="business-profile">
+  <div class="business-profile" v-if="business">
     <h1>{{ business.name }}</h1>
     <p>Category: {{ business.category }}</p>
     <p>Address: {{ business.address }}</p>
@@ -13,7 +13,7 @@
 
     <h2>Operating Hours</h2>
     <ul>
-      <li v-for="hour in business.operatingHours" :key="hour.day">
+      <li v-for="hour in business.operating_hours" :key="hour.day">
         {{ hour.day }}: {{ hour.open }} - {{ hour.close }}
       </li>
     </ul>
@@ -27,10 +27,16 @@
 
     <button @click="goToProducts">View Products</button>
   </div>
+
+  <div v-else>
+    <p>Loading business details...</p>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
+import { useSupabase } from "~/composables/useSupabase";
+import { ref, onMounted } from "vue";
 
 interface OperatingHour {
   day: string;
@@ -39,11 +45,11 @@ interface OperatingHour {
 }
 
 interface Location {
-  coordinates: [number, number]; // [longitude, latitude]
+  coordinates: [number, number];
 }
 
 interface Business {
-  _id: string;
+  id: string;
   name: string;
   category: string;
   address: string;
@@ -51,30 +57,42 @@ interface Business {
   email: string;
   website: string;
   description: string;
-  operatingHours: OperatingHour[];
+  operating_hours: OperatingHour[];
   location: Location;
 }
 
 const route = useRoute();
 const router = useRouter();
+const supabase = useSupabase();
 
-// Dynamically construct the API endpoint using the route parameter
-const { data: business, error } = await useFetch<Business>(
-  () => `/api/businesses/${route.params.id}`
-);
+const business = ref<Business | null>(null);
 
-// Function to generate the HERE Maps URL
+const fetchBusiness = async () => {
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("*")
+    .eq("id", route.params.id)
+    .single();
+
+  if (error) {
+    console.error("Error loading business:", error.message);
+  } else {
+    business.value = data as Business;
+  }
+};
+
 const getMapUrl = (coordinates: [number, number]) => {
   const [longitude, latitude] = coordinates;
   return `https://wego.here.com/?map=${latitude},${longitude},14`;
 };
 
-// Navigate to the products page for the business
 const goToProducts = () => {
-  if (business.value?._id) {
-    router.push(`/products/${business.value._id}`);
+  if (business.value?.id) {
+    router.push(`/products/${business.value.id}`);
   }
 };
+
+onMounted(fetchBusiness);
 </script>
 
 <style scoped>

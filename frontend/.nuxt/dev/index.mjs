@@ -655,10 +655,12 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "apiBase": "http://localhost:1337",
-    "cloudinaryCloudName": "",
-    "cloudinaryApiKey": "",
-    "cloudinaryApiSecret": "",
+    "supabaseUrl": "https://atufkkmyrhfqogjbovua.supabase.co",
+    "supabaseKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dWZra215cmhmcW9namJvdnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNTY0OTMsImV4cCI6MjA2MjYzMjQ5M30.NZgUJ8f2WcpxfpTPtMykGF-lV0cKEb4ObEAM6h6m4mM",
+    "apiBase": "http://localhost:4000/api",
+    "cloudinaryCloudName": "ddxsapk8m",
+    "cloudinaryApiKey": "672347435874522",
+    "cloudinaryApiSecret": "jjXAL0uDBc3OeMslJvHh--ltLic",
     "content": {
       "wsUrl": "ws://localhost:4000/"
     },

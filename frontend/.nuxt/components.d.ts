@@ -13,18 +13,15 @@ type HydrationStrategies = {
 type LazyComponent<T> = (T & DefineComponent<HydrationStrategies, {}, {}, {}, {}, {}, {}, { hydrated: () => void }>)
 interface _GlobalComponents {
       'BusinessCard': typeof import("../components/BusinessCard.vue")['default']
-    'Footer': typeof import("../components/Footer.vue")['default']
-    'Header': typeof import("../components/Header.vue")['default']
-    'Login': typeof import("../components/Login.vue")['default']
     'Map': typeof import("../components/Map.vue")['default']
     'MapSearch': typeof import("../components/MapSearch.vue")['default']
     'ProductDetails': typeof import("../components/ProductDetails.vue")['default']
     'ProductList': typeof import("../components/ProductList.vue")['default']
-    'BusinesLogin': typeof import("../components/businesLogin.vue")['default']
     'BusinessAddProduct': typeof import("../components/businessAddProduct.vue")['default']
     'BusinessCreateAccount': typeof import("../components/businessCreateAccount.vue")['default']
     'BusinessEdit': typeof import("../components/businessEdit.vue")['default']
     'BusinessList': typeof import("../components/businessList.vue")['default']
+    'BusinessLogin': typeof import("../components/businessLogin.vue")['default']
     'BusinessProfile': typeof import("../components/businessProfile.vue")['default']
     'LayoutAppFooter': typeof import("../components/layout/AppFooter.vue")['default']
     'LayoutAppHeader': typeof import("../components/layout/AppHeader.vue")['default']
@@ -87,18 +84,15 @@ interface _GlobalComponents {
     'NuxtIsland': typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
     'NuxtRouteAnnouncer': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
       'LazyBusinessCard': LazyComponent<typeof import("../components/BusinessCard.vue")['default']>
-    'LazyFooter': LazyComponent<typeof import("../components/Footer.vue")['default']>
-    'LazyHeader': LazyComponent<typeof import("../components/Header.vue")['default']>
-    'LazyLogin': LazyComponent<typeof import("../components/Login.vue")['default']>
     'LazyMap': LazyComponent<typeof import("../components/Map.vue")['default']>
     'LazyMapSearch': LazyComponent<typeof import("../components/MapSearch.vue")['default']>
     'LazyProductDetails': LazyComponent<typeof import("../components/ProductDetails.vue")['default']>
     'LazyProductList': LazyComponent<typeof import("../components/ProductList.vue")['default']>
-    'LazyBusinesLogin': LazyComponent<typeof import("../components/businesLogin.vue")['default']>
     'LazyBusinessAddProduct': LazyComponent<typeof import("../components/businessAddProduct.vue")['default']>
     'LazyBusinessCreateAccount': LazyComponent<typeof import("../components/businessCreateAccount.vue")['default']>
     'LazyBusinessEdit': LazyComponent<typeof import("../components/businessEdit.vue")['default']>
     'LazyBusinessList': LazyComponent<typeof import("../components/businessList.vue")['default']>
+    'LazyBusinessLogin': LazyComponent<typeof import("../components/businessLogin.vue")['default']>
     'LazyBusinessProfile': LazyComponent<typeof import("../components/businessProfile.vue")['default']>
     'LazyLayoutAppFooter': LazyComponent<typeof import("../components/layout/AppFooter.vue")['default']>
     'LazyLayoutAppHeader': LazyComponent<typeof import("../components/layout/AppHeader.vue")['default']>
@@ -167,18 +161,15 @@ declare module 'vue' {
 }
 
 export const BusinessCard: typeof import("../components/BusinessCard.vue")['default']
-export const Footer: typeof import("../components/Footer.vue")['default']
-export const Header: typeof import("../components/Header.vue")['default']
-export const Login: typeof import("../components/Login.vue")['default']
 export const Map: typeof import("../components/Map.vue")['default']
 export const MapSearch: typeof import("../components/MapSearch.vue")['default']
 export const ProductDetails: typeof import("../components/ProductDetails.vue")['default']
 export const ProductList: typeof import("../components/ProductList.vue")['default']
-export const BusinesLogin: typeof import("../components/businesLogin.vue")['default']
 export const BusinessAddProduct: typeof import("../components/businessAddProduct.vue")['default']
 export const BusinessCreateAccount: typeof import("../components/businessCreateAccount.vue")['default']
 export const BusinessEdit: typeof import("../components/businessEdit.vue")['default']
 export const BusinessList: typeof import("../components/businessList.vue")['default']
+export const BusinessLogin: typeof import("../components/businessLogin.vue")['default']
 export const BusinessProfile: typeof import("../components/businessProfile.vue")['default']
 export const LayoutAppFooter: typeof import("../components/layout/AppFooter.vue")['default']
 export const LayoutAppHeader: typeof import("../components/layout/AppHeader.vue")['default']
@@ -241,18 +232,15 @@ export const Body: typeof import("../node_modules/nuxt/dist/head/runtime/compone
 export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
 export const NuxtRouteAnnouncer: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
 export const LazyBusinessCard: LazyComponent<typeof import("../components/BusinessCard.vue")['default']>
-export const LazyFooter: LazyComponent<typeof import("../components/Footer.vue")['default']>
-export const LazyHeader: LazyComponent<typeof import("../components/Header.vue")['default']>
-export const LazyLogin: LazyComponent<typeof import("../components/Login.vue")['default']>
 export const LazyMap: LazyComponent<typeof import("../components/Map.vue")['default']>
 export const LazyMapSearch: LazyComponent<typeof import("../components/MapSearch.vue")['default']>
 export const LazyProductDetails: LazyComponent<typeof import("../components/ProductDetails.vue")['default']>
 export const LazyProductList: LazyComponent<typeof import("../components/ProductList.vue")['default']>
-export const LazyBusinesLogin: LazyComponent<typeof import("../components/businesLogin.vue")['default']>
 export const LazyBusinessAddProduct: LazyComponent<typeof import("../components/businessAddProduct.vue")['default']>
 export const LazyBusinessCreateAccount: LazyComponent<typeof import("../components/businessCreateAccount.vue")['default']>
 export const LazyBusinessEdit: LazyComponent<typeof import("../components/businessEdit.vue")['default']>
 export const LazyBusinessList: LazyComponent<typeof import("../components/businessList.vue")['default']>
+export const LazyBusinessLogin: LazyComponent<typeof import("../components/businessLogin.vue")['default']>
 export const LazyBusinessProfile: LazyComponent<typeof import("../components/businessProfile.vue")['default']>
 export const LazyLayoutAppFooter: LazyComponent<typeof import("../components/layout/AppFooter.vue")['default']>
 export const LazyLayoutAppHeader: LazyComponent<typeof import("../components/layout/AppHeader.vue")['default']>

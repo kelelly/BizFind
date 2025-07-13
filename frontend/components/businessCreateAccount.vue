@@ -37,19 +37,11 @@
       </label>
       <label>
         Latitude:
-        <input
-          type="number"
-          v-model="business.location.coordinates[1]"
-          required
-        />
+        <input type="number" v-model="business.lat" step="any" required />
       </label>
       <label>
         Longitude:
-        <input
-          type="number"
-          v-model="business.location.coordinates[0]"
-          required
-        />
+        <input type="number" v-model="business.lng" step="any" required />
       </label>
       <label>
         Description:
@@ -61,13 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { supabase } from "~/utils/supabase"; // adjust if your path is different
 
-interface Location {
-  type: string;
-  coordinates: [number, number];
-}
+const router = useRouter();
 
 interface Business {
   name: string;
@@ -77,8 +67,9 @@ interface Business {
   password: string;
   website: string;
   category: string;
-  location: Location;
   description: string;
+  lat: number;
+  lng: number;
 }
 
 const business = ref<Business>({
@@ -89,27 +80,65 @@ const business = ref<Business>({
   password: "",
   website: "",
   category: "",
-  location: {
-    type: "Point",
-    coordinates: [0, 0],
-  },
   description: "",
+  lat: 0,
+  lng: 0,
 });
 
-const router = useRouter();
+// Auto-fill location from browser geolocation
+onMounted(() => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        business.value.lat = position.coords.latitude;
+        business.value.lng = position.coords.longitude;
+      },
+      (error) => {
+        console.warn("Geolocation error:", error.message);
+      }
+    );
+  }
+});
 
-const registerBusiness = async (): Promise<void> => {
+const registerBusiness = async () => {
   try {
-    const response = await fetch("/api/business/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(business.value),
+    // 1. Sign up user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: business.value.email,
+      password: business.value.password,
     });
-    alert("Business registered successfully");
+
+    if (authError) throw authError;
+
+    const userId = authData.user?.id;
+    if (!userId) throw new Error("User ID not returned");
+
+    // 2. Construct POINT from lat/lng
+    const locationWKT = `POINT(${business.value.lng} ${business.value.lat})`;
+
+    // 3. Insert business row
+    const { error: insertError } = await supabase.from("businesses").insert([
+      {
+        owner_id: userId,
+        name: business.value.name,
+        address: business.value.address,
+        phone: business.value.phone,
+        email: business.value.email,
+        website: business.value.website,
+        category: business.value.category,
+        description: business.value.description,
+        image_url: null, // you can adjust this if needed
+        location: locationWKT,
+      },
+    ]);
+
+    if (insertError) throw insertError;
+
+    alert("Registration successful. Please check your email to confirm.");
     router.push("/login");
-  } catch (error) {
-    console.error("Registration failed:", error);
-    alert("Registration failed");
+  } catch (error: any) {
+    console.error("Registration failed:", error.message);
+    alert("Registration failed: " + error.message);
   }
 };
 </script>

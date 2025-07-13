@@ -174,6 +174,10 @@ declare module 'nuxt/schema' {
    },
   }
   interface PublicRuntimeConfig {
+   supabaseUrl: string,
+
+   supabaseKey: string,
+
    apiBase: string,
 
    cloudinaryCloudName: string,

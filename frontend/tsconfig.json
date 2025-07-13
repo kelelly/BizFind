@@ -4,31 +4,37 @@
     "strict": true,
     "skipLibCheck": true,
     "types": ["@nuxt/schema", "@types/node"],
+
     "paths": {
-      "~/*": ["./*"],
+      "~/*": ["./*"],     // ✅ For Nuxt aliasing
       "@/*": ["./*"]
     },
-    "moduleResolution": "bundler",
+
+    "moduleResolution": "bundler",   // ✅ Good for Vite + ESM
     "target": "ESNext",
     "module": "ESNext",
     "jsx": "preserve",
+
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "baseUrl": ".",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "forceConsistentCasingInFileNames": true,
+
+    "noEmit": true,                // ✅ For type-checking only
+    "baseUrl": ".",                // ✅ Required for path aliases
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]  // ✅ Full browser + async support
   },
+
   "include": [
-    ".nuxt/nuxt.d.ts",
-    "types/**/*.d.ts",
-    "**/*",
+    ".nuxt/nuxt.d.ts",      // ✅ Nuxt types
+    "types/**/*.d.ts",      // ✅ Custom types
+    "**/*",                 // ✅ All source files
     "shims-vue.d.ts"
   ],
+
   "exclude": [
     "node_modules"
   ]
-} 
+}

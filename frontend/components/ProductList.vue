@@ -4,10 +4,10 @@
       No products found for this business.
     </div>
     <div v-else class="product-cards">
-      <div v-for="product in products" :key="product._id" class="product-card">
+      <div v-for="product in products" :key="product.id" class="product-card">
         <h3>{{ product.name }}</h3>
-        <p>Price: {{ product.price | currency }}</p>
-        <button @click="viewProductDetails(product._id)">Show More</button>
+        <p>Price: ${{ product.price.toFixed(2) }}</p>
+        <button @click="viewProductDetails(product.id)">Show More</button>
       </div>
     </div>
   </div>
@@ -15,27 +15,32 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { useProductData } from "@/composables/useProductData";
 
 interface Product {
-  _id: string;
+  id: string;
   name: string;
   price: number;
 }
 
-const products = ref<Product[]>([]);
+const route = useRoute();
 const router = useRouter();
+const { getProductsByBusiness } = useProductData();
+
+const products = ref<Product[]>([]);
 
 const fetchProducts = async () => {
-  try {
-    const response = await fetch(
-      `/api/products?businessId=${router.currentRoute.value.params.businessId}`
-    );
-    if (!response.ok) throw new Error("Failed to fetch products");
-    products.value = await response.json();
-  } catch (error) {
-    console.error("Error fetching products:", error);
+  const businessId = route.params.businessId as string;
+
+  const { data, error } = await getProductsByBusiness(businessId);
+
+  if (error) {
+    console.error("Error fetching products:", error.message);
+    return;
   }
+
+  products.value = data || [];
 };
 
 const viewProductDetails = (productId: string) => {
@@ -101,3 +106,4 @@ onMounted(fetchProducts);
   background-color: #0056b3;
 }
 </style>
+~/composables/useProducts

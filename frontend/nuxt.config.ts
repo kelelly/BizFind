@@ -1,5 +1,6 @@
 import { defineNuxtConfig } from "nuxt/config";
 import tailwindcss from "@tailwindcss/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineNuxtConfig({
   // Enable or disable Nuxt DevTools
@@ -33,6 +34,8 @@ export default defineNuxtConfig({
   // Runtime configuration
   runtimeConfig: {
     public: {
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseKey: process.env.SUPABASE_KEY,
       apiBase: process.env.API_BASE_URL || "http://localhost:1337",
       cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
       cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
@@ -58,7 +61,6 @@ export default defineNuxtConfig({
     { src: "~~/plugins/axios.ts" },
     { src: "~~/plugins/toast.ts" },
     { src: "~~/plugins/iconify.ts" },
-    { src: "~~/plugins/auth.ts" },
   ],
 
   // Auto import components
@@ -87,7 +89,7 @@ export default defineNuxtConfig({
 
   // Vite configuration
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), tsconfigPaths()],
     server: {
       hmr: {
         protocol: "ws",

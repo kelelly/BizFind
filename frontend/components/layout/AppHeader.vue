@@ -50,12 +50,11 @@ interface NavigationLink {
 
 const navigationLinks: NavigationLink[] = [
   { path: "/", label: "Home" },
-  { path: "/landingPage", label: ">>>" },
   { path: "/about", label: "About" },
   { path: "/businessList", label: "Businesses" },
   { path: "/contactUs", label: "Contact Us" },
   { path: "/businessRegister", label: "Register Business" },
-  { path: "/loginPage", label: "Login" },
+  { path: "/login", label: "Login" },
 ];
 
 const isMobileMenuOpen = ref(false);

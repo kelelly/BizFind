@@ -6,78 +6,89 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useApi } from "~/composables/useApi";
-import type { Business } from "~/types/business"; // Add types for business data
+import { useSupabaseClient } from "@supabase/auth-helpers-nuxt";
+import type { Business } from "~/types/business";
+import { useRuntimeConfig } from "#imports";
 
-const { fetch } = useApi();
+const supabase = useSupabaseClient();
+const config = useRuntimeConfig();
 const businesses = ref<Business[]>([]);
 const map = ref<H.Map | null>(null);
+let ui: H.ui.UI | null = null;
 
-// Fetch businesses when the component is mounted
+// Initialize HERE map and markers
 onMounted(async () => {
-  try {
-    const response = await fetch<{ businesses: Business[] }>("/businesses");
-    businesses.value = response.data.businesses;
-    initMap();
-  } catch (error) {
-    console.error("Error fetching businesses:", error);
-    businesses.value = [];
-  }
+  await fetchBusinesses();
+  initMap();
 });
 
-// Initialize the map using the HERE Maps API
-const initMap = () => {
-  const platform = new H.service.Platform({
-    apikey: process.env.HERE_API_KEY, // Ensure you have the API key set in your environment
-  });
-  const defaultLayers = platform.createDefaultLayers();
-  const mapContainer = document.getElementById("map");
-  map.value = new H.Map(mapContainer, defaultLayers.vector.normal.map, {
-    zoom: 12,
-    center: { lat: 52.53086, lng: 13.38474 }, // Default center (Berlin) - adjust as needed
-  });
+const fetchBusinesses = async () => {
+  const { data, error } = await supabase.from("businesses").select("*");
 
-  const behavior = new H.mapevents.Behavior(
-    new H.mapevents.MapEvents(map.value)
+  if (error) {
+    console.error("Supabase error:", error);
+    return;
+  }
+
+  businesses.value = (data as Business[]).filter(
+    (b) => b.location?.coordinates
   );
-  const ui = H.ui.UI.createDefault(map.value, defaultLayers);
-
-  addMarkersToMap(map.value);
 };
 
-// Add markers to the map for each business
-const addMarkersToMap = (map: H.Map) => {
-  const icon = new H.map.Icon("/path/to/marker-icon.png");
+const initMap = () => {
+  const platform = new H.service.Platform({
+    apikey: config.public.hereApiKey,
+  });
+
+  const defaultLayers = platform.createDefaultLayers();
+  const mapElement = document.getElementById("map")!;
+
+  map.value = new H.Map(mapElement, defaultLayers.vector.normal.map, {
+    zoom: 12,
+    center: { lat: -1.286389, lng: 36.817223 }, // Nairobi center
+  });
+
+  // Add interaction & UI
+  new H.mapevents.Behavior(new H.mapevents.MapEvents(map.value));
+  ui = H.ui.UI.createDefault(map.value, defaultLayers);
+
+  addMarkersToMap();
+};
+
+const addMarkersToMap = () => {
+  const icon = new H.map.Icon("/images/marker-icon.png"); // Customize if needed
   const group = new H.map.Group();
 
   businesses.value.forEach((business) => {
-    const position = {
-      lat: business.location.coordinates[1],
-      lng: business.location.coordinates[0],
-    };
-    const isOpen = checkIfOpen(business.operatingHours);
-    const marker = new H.map.Marker(position, { icon: icon });
+    const coords = business.location?.coordinates;
+    if (!coords || coords.length < 2) return;
 
-    marker.setData(`
-      <div>
-        <h3>${business.name}</h3>
+    const position = { lat: coords[1], lng: coords[0] };
+    const marker = new H.map.Marker(position, { icon });
+
+    const isOpen = checkIfOpen(business.operatingHours);
+    const popup = `
+      <div style="width: 200px">
+        <strong>${business.name}</strong>
         <p>Category: ${business.category}</p>
         <p>Phone: ${business.phone}</p>
         <p>Email: ${business.email}</p>
-        <p>Status: ${isOpen ? "Open Now" : "Closed Now"}</p>
-        <a href="/business/${business._id}" target="_blank">View Details</a>
+        <p>Status: <b>${isOpen ? "Open" : "Closed"}</b></p>
+        <a href="/business/${business.id}" target="_blank">View Details</a>
       </div>
-    `);
+    `;
 
+    marker.setData(popup);
     group.addObject(marker);
   });
 
-  map.addObject(group);
+  map.value?.addObject(group);
 
-  map.addEventListener("tap", (event: any) => {
-    const target = event.target;
-    if (target instanceof H.map.Marker) {
-      const bubble = new H.ui.InfoBubble(target.getPosition(), {
+  // Tap interaction
+  map.value?.addEventListener("tap", (evt: any) => {
+    const target = evt.target;
+    if (target instanceof H.map.Marker && ui) {
+      const bubble = new H.ui.InfoBubble(target.getGeometry(), {
         content: target.getData(),
       });
       ui.addBubble(bubble);
@@ -85,17 +96,16 @@ const addMarkersToMap = (map: H.Map) => {
   });
 };
 
-// Check if the business is currently open based on operating hours
+// Helper: Check open/closed status
 const checkIfOpen = (operatingHours: any[]) => {
   const now = new Date();
-  const day = now.toLocaleDateString("en-US", { weekday: "long" });
-  const time = now.toTimeString().slice(0, 5);
+  const currentDay = now.toLocaleDateString("en-US", { weekday: "long" });
+  const currentTime = now.toTimeString().slice(0, 5);
 
-  const hours = operatingHours.find((hour) => hour.day === day);
-  if (hours) {
-    return time >= hours.open && time <= hours.close;
-  }
-  return false;
+  const today = operatingHours?.find((h) => h.day === currentDay);
+  if (!today) return false;
+
+  return currentTime >= today.open && currentTime <= today.close;
 };
 </script>
 
@@ -104,7 +114,6 @@ const checkIfOpen = (operatingHours: any[]) => {
   height: 100vh;
   width: 100%;
 }
-
 .map {
   height: 100%;
   width: 100%;

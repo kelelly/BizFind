@@ -3,9 +3,9 @@
     <h1>Contact Us</h1>
     <p>
       We'd love to hear from you! If you have any questions, feedback, or need
-      assistance, please reach out to us using the contact form below or through
-      our provided contact information.
+      assistance, please reach out using the contact form below.
     </p>
+
     <form @submit.prevent="sendMessage">
       <label>
         Name:
@@ -19,14 +19,17 @@
         Message:
         <textarea v-model="contact.message" required></textarea>
       </label>
-      <button type="submit">Send Message</button>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? "Sending..." : "Send Message" }}
+      </button>
     </form>
+
     <div class="contact-info">
       <h2>Our Contact Information</h2>
       <p>Email: in4bizfind.com</p>
       <p>Phone: +254742584681</p>
-      <p>Facebook_Page: @BizzareEmpire</p>
-      <p>X_Handle: @BizEmperor</p>
+      <p>Facebook Page: @BizzareEmpire</p>
+      <p>X Handle: @BizEmperor</p>
       <p>Address: Baraton Street, Box 2500-30100, Eldoret</p>
     </div>
   </div>
@@ -34,6 +37,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { supabase } from "~/utils/supabase"; // ✅ use your centralized client
 
 interface ContactForm {
   name: string;
@@ -41,29 +45,36 @@ interface ContactForm {
   message: string;
 }
 
+const isSubmitting = ref(false);
 const contact = ref<ContactForm>({
   name: "",
   email: "",
   message: "",
 });
 
-const sendMessage = async (): Promise<void> => {
+const sendMessage = async () => {
+  isSubmitting.value = true;
   try {
-    const response = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(contact.value),
-    });
+    const { error } = await supabase.from("contact_messages").insert([
+      {
+        name: contact.value.name,
+        email: contact.value.email,
+        message: contact.value.message,
+      },
+    ]);
 
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+    if (error) {
+      console.error("Insert error:", error);
+      alert("Failed to send your message. Please try again.");
+    } else {
+      alert("Your message has been sent successfully!");
+      contact.value = { name: "", email: "", message: "" };
     }
-
-    alert("Your message has been sent successfully!");
-    contact.value = { name: "", email: "", message: "" };
-  } catch (error) {
-    console.error("Error sending message:", error);
-    alert("Failed to send your message. Please try again.");
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    alert("An error occurred while sending your message.");
+  } finally {
+    isSubmitting.value = false;
   }
 };
 </script>
@@ -73,8 +84,8 @@ const sendMessage = async (): Promise<void> => {
   max-width: 800px;
   margin: 0 auto;
   padding: 2em;
-  background-color: #ffffff; /* White background */
-  color: #1b1b1b; /* Dark blue (almost black) text color */
+  background-color: #ffffff;
+  color: #1b1b1b;
 }
 
 .contact-us h1 {

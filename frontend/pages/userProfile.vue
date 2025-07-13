@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useAuth } from "@/composables/useAuth";
 
 interface User {
   username: string;
@@ -11,18 +12,45 @@ interface User {
   password: string;
 }
 
+const { getSession, updateProfileData } = useAuth();
+
 const user = ref<User>({
   username: "",
   email: "",
   password: "",
 });
-const newPassword = ref<string>("");
+
 const view = ref<string>("profile"); // Default view
 
 const fetchUserProfile = async (): Promise<void> => {
   try {
-    const response = await fetch("/api/users/profile");
-    user.value = await response.json();
+    const { data: sessionData, error: sessionError } = await getSession();
+
+    if (sessionError || !sessionData.session) {
+      console.error("Error retrieving session:", sessionError?.message);
+      return;
+    }
+
+    const supabase = useAuth().supabase;
+
+    const userId = sessionData.session.user.id;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching profile:", error.message);
+      return;
+    }
+
+    user.value = {
+      username: data.username || "",
+      email: sessionData.session.user.email || "",
+      password: "", // never store password in UI
+    };
   } catch (error) {
     console.error("Error fetching user profile:", error);
   }
@@ -30,31 +58,16 @@ const fetchUserProfile = async (): Promise<void> => {
 
 const updateProfile = async (): Promise<void> => {
   try {
-    const { password, ...userData } = user.value;
-    await fetch("/api/users/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...userData, password }),
-    });
-    alert("Profile updated successfully!");
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    alert("Profile update failed. Please try again.");
-  }
-};
+    const { username } = user.value;
 
-const resetPassword = async (): Promise<void> => {
-  try {
-    await fetch("/api/users/reset-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: newPassword.value }),
-    });
-    alert("Password reset successful!");
-    newPassword.value = ""; // Clear the new password field
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    alert("Password reset failed. Please try again.");
+    const { error } = await updateProfileData({ username });
+
+    if (error) throw error;
+
+    alert("Profile updated successfully!");
+  } catch (error: any) {
+    console.error("Error updating profile:", error?.message || error);
+    alert("Profile update failed. Please try again.");
   }
 };
 
